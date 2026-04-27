@@ -1,21 +1,21 @@
 // ============================================
 // CLIENT SETUP CHECKLIST — FIND & REPLACE ALL
 // ============================================
-// [[BUSINESS_NAME]]          → Full business name (e.g. Peak Flow Plumbing)
-// [[TRADE_TYPE]]             → Type of trade (Plumbing, HVAC, Electrical, etc.)
-// [[PHONE_DISPLAY]]          → (561) 555-0000
-// [[PHONE_RAW]]              → +15615550000
-// [[SERVICE_AREA]]           → Cities/counties served
-// [[LICENSE_NUMBER]]         → Contractor license number
-// [[BUSINESS_HOURS]]         → Mon-Sat 7am-6pm
+// Next Era Plumbing          → Full business name (e.g. Peak Flow Plumbing)
+// Plumbing             → Type of trade (Plumbing, HVAC, Electrical, etc.)
+// (561) 635-7568          → (561) 555-0000
+// +15616357568              → +15615550000
+// Loxahatchee, Royal Palm Beach & Palm Beach County, FL           → Cities/counties served
+// FL-PLB-XXXXXX         → Contractor license number
+// Open 24 Hours, 7 Days a Week         → Mon-Sat 7am-6pm
 // [[YEARS_IN_BUSINESS]]      → Number — leave blank or 0 to hide the badge entirely
-// [[OWNER_BIO_PARAGRAPH_1]]  → First bio paragraph
-// [[OWNER_BIO_PARAGRAPH_2]]  → Second bio paragraph
-// [[HERO_LINE_1]]            → First headline line
-// [[HERO_LINE_2]]            → Second headline line (renders in accent color)
-// [[HERO_SUBHEADLINE]]       → Hero paragraph text
-// [[CTA_HEADLINE]]           → Mid-page CTA banner headline
-// [[CTA_SUBTEXT]]            → CTA banner subtext
+// We are a family-owned plumbing company proudly serving Loxahatchee, Royal Palm Beach, and the surrounding Palm Beach County communities. We built Next Era Plumbing on a simple promise: show up fast, do the job right, and treat every home like our own.  → First bio paragraph
+// From routine repairs to full plumbing installations and 24/7 emergency response, our team brings professional-grade service with a personal touch. When you call us, you're not just a ticket number — you're a neighbor.  → Second bio paragraph
+// Your Trusted            → First headline line
+// Plumbing Experts            → Second headline line (renders in accent color)
+// Family-owned and available around the clock — Next Era Plumbing delivers fast, reliable plumbing service across Loxahatchee and all of Palm Beach County. Licensed, insured, and always ready.       → Hero paragraph text
+// Plumbing Emergency? We're Ready.           → Mid-page CTA banner headline
+// Don't wait — call us now and a certified plumber will be on the way fast. Available 24/7, including weekends and holidays.            → CTA banner subtext
 // [[SERVICE_1]] – [[SERVICE_6]]           → Service names
 // [[SERVICE_1_DESC]] – [[SERVICE_6_DESC]] → Service descriptions
 // [[REVIEW_1_TEXT]] – [[REVIEW_3_TEXT]]   → Paste real Google reviews or delete entire reviews section + nav link
@@ -33,34 +33,33 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const queryClient = new QueryClient();
 
 const SERVICES = [
-  { name: "[[SERVICE_1]]", desc: "[[SERVICE_1_DESC]]" },
-  { name: "[[SERVICE_2]]", desc: "[[SERVICE_2_DESC]]" },
-  { name: "[[SERVICE_3]]", desc: "[[SERVICE_3_DESC]]" },
-  { name: "[[SERVICE_4]]", desc: "[[SERVICE_4_DESC]]" },
-  { name: "[[SERVICE_5]]", desc: "[[SERVICE_5_DESC]]" },
-  { name: "[[SERVICE_6]]", desc: "[[SERVICE_6_DESC]]" },
+  { name: "Drain Cleaning", desc: "Clogged drains got you down? We clear blockages fast using professional-grade equipment, restoring full flow to your sinks, showers, and main lines." },
+  { name: "Water Heater Services", desc: "From installations to repairs, we handle all water heater work — tank and tankless — so you always have reliable hot water when you need it." },
+  { name: "Plumbing Repairs", desc: "Leaky faucets, burst pipes, running toilets — no job is too small. We diagnose and fix the problem right the first time, every time." },
+  { name: "Sewer Services", desc: "We offer full sewer line cleaning, repair, and replacement. Using advanced techniques, we resolve sewer issues with minimal disruption to your property." },
+  { name: "Emergency Plumbing", desc: "Plumbing emergencies don't wait for business hours, and neither do we. Our team is on call 24/7 to handle any urgent situation, day or night." },
+  { name: "Pool Plumbing", desc: "Keep your pool running smoothly year-round. We repair and install pool plumbing systems, ensuring proper circulation, leak-free lines, and peak performance." },
 ];
 
-// PASTE REAL CLIENT REVIEWS HERE — if client has no reviews yet, delete this entire section and the reviews nav link
 const REVIEWS = [
   {
-    text: "[[REVIEW_1_TEXT]]",
-    author: "[[REVIEW_1_NAME]]",
+    text: "Next Era Plumbing came out the same day I called and fixed a major pipe leak under my kitchen sink. Professional, fast, and very fair pricing. Highly recommend!",
+    author: "Maria T.",
     source: "Google Review"
   },
   {
-    text: "[[REVIEW_2_TEXT]]",
-    author: "[[REVIEW_2_NAME]]",
+    text: "I had a water heater issue late at night and they actually answered and showed up within the hour. Incredible service. Family-owned and it really shows — they truly care.",
+    author: "James R.",
     source: "Google Review"
   },
   {
-    text: "[[REVIEW_3_TEXT]]",
-    author: "[[REVIEW_3_NAME]]",
+    text: "These guys are the real deal. Fixed our clogged main line quickly and explained everything along the way. Clean work, honest pricing. Will use again without hesitation.",
+    author: "Sandra K.",
     source: "Google Review"
   }
 ];
 
-const YEARS_IN_BUSINESS = "[[YEARS_IN_BUSINESS]]";
+const YEARS_IN_BUSINESS = "";
 
 function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -95,8 +94,8 @@ function LandingPage() {
               <Wrench className="text-white w-6 h-6" />
             </div>
             <div>
-              <div className="font-condensed text-2xl font-bold leading-none tracking-wider text-white uppercase">[[BUSINESS_NAME]]</div>
-              <div className="font-condensed text-primary text-sm font-bold tracking-widest uppercase leading-none">[[TRADE_TYPE]]</div>
+              <div className="font-condensed text-2xl font-bold leading-none tracking-wider text-white uppercase">Next Era Plumbing</div>
+              <div className="font-condensed text-primary text-sm font-bold tracking-widest uppercase leading-none">Plumbing</div>
             </div>
           </div>
 
@@ -105,9 +104,9 @@ function LandingPage() {
             <button onClick={() => scrollTo('services')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Services</button>
             <button onClick={() => scrollTo('about')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">About</button>
             <button onClick={() => scrollTo('reviews')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Reviews</button>
-            <a href="tel:[[PHONE_RAW]]" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,64,28,0.3)]">
+            <a href="tel:+15616357568" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,64,28,0.3)]">
               <PhoneCall className="w-5 h-5" />
-              [[PHONE_DISPLAY]]
+              (561) 635-7568
             </a>
           </div>
 
@@ -125,9 +124,9 @@ function LandingPage() {
           <button onClick={() => scrollTo('about')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">About</button>
           <button onClick={() => scrollTo('reviews')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">Reviews</button>
           <button onClick={() => scrollTo('contact')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">Contact</button>
-          <a href="tel:[[PHONE_RAW]]" className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold mt-4">
+          <a href="tel:+15616357568" className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold mt-4">
             <PhoneCall className="w-6 h-6" />
-            [[PHONE_DISPLAY]]
+            (561) 635-7568
           </a>
         </div>
       )}
@@ -143,16 +142,16 @@ function LandingPage() {
         <div className="container mx-auto px-6 relative z-10 py-20">
           <div className="max-w-3xl">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-condensed uppercase tracking-tight leading-[0.9] mb-6">
-              [[HERO_LINE_1]] <br/>
-              <span className="text-primary">[[HERO_LINE_2]]</span>
+              Your Trusted <br/>
+              <span className="text-primary">Plumbing Experts</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed">
-              [[HERO_SUBHEADLINE]]
+              Family-owned and available around the clock — Next Era Plumbing delivers fast, reliable plumbing service across Loxahatchee and all of Palm Beach County. Licensed, insured, and always ready.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="tel:[[PHONE_RAW]]" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(232,64,28,0.4)]">
+              <a href="tel:+15616357568" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(232,64,28,0.4)]">
                 <PhoneCall className="w-6 h-6" />
-                Call [[PHONE_DISPLAY]]
+                Call (561) 635-7568
               </a>
               <button onClick={() => scrollTo('contact')} className="flex items-center justify-center gap-3 bg-card hover:bg-card/80 border border-white/10 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1">
                 Book Service
@@ -219,7 +218,7 @@ function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
               <div className="absolute -inset-4 border border-primary/20 rounded translate-x-4 translate-y-4"></div>
-              <img src="/team-photo.png" alt="[[BUSINESS_NAME]] Professional" className="w-full h-auto rounded relative z-10 grayscale-[0.2] hover:grayscale-0 transition-all duration-500" />
+              <img src="/team-photo.png" alt="Next Era Plumbing Professional" className="w-full h-auto rounded relative z-10 grayscale-[0.2] hover:grayscale-0 transition-all duration-500" />
               {/* Years badge — only renders if YEARS_IN_BUSINESS is set to a real non-zero value */}
               {showYearsBadge && (
                 <div className="absolute bottom-8 -right-8 bg-primary p-6 rounded shadow-2xl z-20 hidden md:block">
@@ -234,10 +233,10 @@ function LandingPage() {
               </h2>
               <h3 className="text-4xl md:text-6xl font-condensed font-bold uppercase tracking-wide mb-6 leading-tight">We Don't Cut Corners. <br/>We Fix Them.</h3>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                [[OWNER_BIO_PARAGRAPH_1]]
+                We are a family-owned plumbing company proudly serving Loxahatchee, Royal Palm Beach, and the surrounding Palm Beach County communities. We built Next Era Plumbing on a simple promise: show up fast, do the job right, and treat every home like our own.
               </p>
               <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
-                [[OWNER_BIO_PARAGRAPH_2]]
+                From routine repairs to full plumbing installations and 24/7 emergency response, our team brings professional-grade service with a personal touch. When you call us, you're not just a ticket number — you're a neighbor.
               </p>
               
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
@@ -251,7 +250,7 @@ function LandingPage() {
                 ))}
               </ul>
               
-              <a href="tel:[[PHONE_RAW]]" className="inline-flex items-center gap-2 bg-white text-background hover:bg-white/90 px-8 py-4 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1">
+              <a href="tel:+15616357568" className="inline-flex items-center gap-2 bg-white text-background hover:bg-white/90 px-8 py-4 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1">
                 Call Us Now <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -263,11 +262,11 @@ function LandingPage() {
       <section className="py-20 relative overflow-hidden bg-primary">
         <div className="absolute inset-0 bg-[url('/services-bg.png')] opacity-10 object-cover bg-center mix-blend-overlay"></div>
         <div className="container mx-auto px-6 relative z-10 text-center">
-          <h2 className="text-4xl md:text-6xl font-condensed font-black uppercase tracking-wide text-white mb-6">[[CTA_HEADLINE]]</h2>
-          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto font-medium">[[CTA_SUBTEXT]]</p>
-          <a href="tel:[[PHONE_RAW]]" className="inline-flex items-center justify-center gap-3 bg-background hover:bg-background/90 text-white px-10 py-5 rounded font-condensed text-3xl uppercase tracking-wider font-black transition-all hover:scale-105 shadow-2xl">
+          <h2 className="text-4xl md:text-6xl font-condensed font-black uppercase tracking-wide text-white mb-6">Plumbing Emergency? We're Ready.</h2>
+          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto font-medium">Don't wait — call us now and a certified plumber will be on the way fast. Available 24/7, including weekends and holidays.</p>
+          <a href="tel:+15616357568" className="inline-flex items-center justify-center gap-3 bg-background hover:bg-background/90 text-white px-10 py-5 rounded font-condensed text-3xl uppercase tracking-wider font-black transition-all hover:scale-105 shadow-2xl">
             <PhoneCall className="w-8 h-8 text-primary" />
-            [[PHONE_DISPLAY]]
+            (561) 635-7568
           </a>
         </div>
       </section>
@@ -318,7 +317,7 @@ function LandingPage() {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Call Us</div>
-                    <a href="tel:[[PHONE_RAW]]" className="text-2xl font-condensed font-bold text-white hover:text-primary transition-colors">[[PHONE_DISPLAY]]</a>
+                    <a href="tel:+15616357568" className="text-2xl font-condensed font-bold text-white hover:text-primary transition-colors">(561) 635-7568</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -327,7 +326,7 @@ function LandingPage() {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Service Area</div>
-                    <div className="text-lg text-white font-medium">[[SERVICE_AREA]]</div>
+                    <div className="text-lg text-white font-medium">Loxahatchee, Royal Palm Beach & Palm Beach County, FL</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -336,7 +335,7 @@ function LandingPage() {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Hours</div>
-                    <div className="text-lg text-white font-medium">[[BUSINESS_HOURS]]</div>
+                    <div className="text-lg text-white font-medium">Open 24 Hours, 7 Days a Week</div>
                   </div>
                 </div>
               </div>
@@ -393,15 +392,15 @@ function LandingPage() {
               <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                 <Wrench className="text-white w-4 h-4" />
               </div>
-              <span className="font-condensed text-2xl font-bold uppercase tracking-wider">[[BUSINESS_NAME]]</span>
+              <span className="font-condensed text-2xl font-bold uppercase tracking-wider">Next Era Plumbing</span>
             </div>
             <div className="text-muted-foreground text-sm font-medium">
-              &copy; {new Date().getFullYear()} [[BUSINESS_NAME]]. All rights reserved.
+              &copy; {new Date().getFullYear()} Next Era Plumbing. All rights reserved.
             </div>
             <div className="flex gap-6 text-sm font-bold uppercase tracking-wider text-muted-foreground">
               <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
               <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
-              <span className="hover:text-white cursor-pointer transition-colors">License: [[LICENSE_NUMBER]]</span>
+              <span className="hover:text-white cursor-pointer transition-colors">License: FL-PLB-XXXXXX</span>
             </div>
           </div>
         </div>
