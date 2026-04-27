@@ -1,0 +1,67 @@
+Build me a complete, single-file HTML website template for a local trades business (plumber, HVAC, electrician, etc.).
+
+The site must use placeholder text in [[DOUBLE_BRACKETS]] format so I can find and replace per client. No real business info anywhere.
+
+PLACEHOLDERS TO INCLUDE:
+[[BUSINESS_NAME]] - full business name
+[[BUSINESS_NAME_SHORT]] - short version for logo
+[[TRADE_TYPE]] - type of trade
+[[PHONE_DISPLAY]] - formatted phone (561) 555-0100
+[[PHONE_RAW]] - raw phone for tel: links +15615550100
+[[EMAIL]] - business email
+[[CITY]] / [[STATE]] - location
+[[YEARS_IN_BUSINESS]] - number
+[[JOBS_COMPLETED]] - number
+[[REVIEW_SCORE]] - ex: 4.9
+[[REVIEW_COUNT]] - number of reviews
+[[HERO_IMAGE_URL]] - hero background image URL
+[[LICENSE_NUMBER]] - contractor license number
+[[BUSINESS_HOURS]] - ex: Mon-Sat 7am-7pm
+[[SERVICE_AREA]] - cities served
+[[HERO_HEADLINE_LINE1]] / [[HERO_HEADLINE_LINE2]] - two line hero headline
+[[HERO_SUBHEADLINE]] - hero paragraph
+[[SERVICE_1_NAME]] through [[SERVICE_6_NAME]] - service names
+[[SERVICE_1_DESC]] through [[SERVICE_6_DESC]] - service descriptions
+[[OWNER_NAME]] - owner first name
+[[OWNER_BIO]] - 2-3 sentence owner/company story
+[[CONTACT_INTRO]] - contact section intro
+[[FOOTER_TAGLINE]] - short footer description
+
+IMPORTANT — KEEP IT SET AND FORGET:
+- NO live Google review API integration. Reviews are hardcoded HTML. I will manually paste in 3-5 real reviews from the client once during setup, then never touch them again.
+- NO dynamic data, NO API calls, NO CMS, NO database, NO backend dependencies of any kind.
+- Contact form uses Formspree (free). One [[FORMSPREE_ID]] placeholder in the form action URL. Formspree emails the lead directly to the client — zero maintenance.
+- NO Google Maps embed. Replace with a simple styled text block showing city, service area, and phone number. Maps embeds require API keys and ongoing maintenance.
+- NO social media feeds or live integrations. Social icons in footer link to [[FACEBOOK_URL]] and [[INSTAGRAM_URL]] placeholders only.
+- Everything must work indefinitely with zero ongoing maintenance unless the client requests a change.
+
+REQUIRED SECTIONS IN ORDER:
+
+1. NAVIGATION — fixed top bar, logo left, links center (Services, About, Reviews, Contact), phone number + CTA button right, hamburger on mobile
+
+2. HERO — full viewport height, dark overlay on [[HERO_IMAGE_URL]] background, city badge top, large two-line headline, subheadline, two CTA buttons (Call Now + Free Quote), 4 stat counters (years in business, jobs completed, review score, review count)
+
+3. TRUST BAR — horizontal strip with 5 badges: Licensed & Insured, Same-Day Service, Free Estimates, [[YEARS_IN_BUSINESS]]+ Years Experience, Serving [[CITY]]
+
+4. SERVICES — 6 cards in a responsive grid. Each card: emoji icon, service name, short description. Hover effect with brand color accent. No links needed — purely informational.
+
+5. ABOUT — two column layout. Left: owner photo placeholder ([[OWNER_IMAGE_URL]]) with years-in-business badge overlay. Right: section label, headline, [[OWNER_BIO]], 3 hardcoded value points with icons (Fast Response, Licensed & Insured, Satisfaction Guaranteed).
+
+6. REVIEWS — 3 hardcoded review cards. Each card has: 5 stars, review text [[REVIEW_1_TEXT]], reviewer initial avatar [[REVIEW_1_INITIAL]], reviewer name [[REVIEW_1_NAME]], and label "Google Review". No dates needed. No API. Just static HTML I paste real reviews into once.
+
+7. CONTACT — two column layout. Left: phone, email, hours, service area as styled info blocks. Right: Formspree lead form with fields — first name, last name, phone, email, service dropdown (options match [[SERVICE_1_NAME]] through [[SERVICE_6_NAME]]), message textarea, submit button. Form action = https://formspree.io/f/[[FORMSPREE_ID]]
+
+8. FOOTER — logo + tagline left, 3 link columns (Services, Company, Contact), bottom bar with copyright auto-year, license number [[LICENSE_NUMBER]], Facebook and Instagram icon links, privacy policy placeholder link.
+
+DESIGN REQUIREMENTS:
+- Dark theme — #111214 background, #1E2025 cards
+- Brand accent: #E8401C red-orange for all CTAs, hovers, accents
+- Fonts: Barlow Condensed (headings) + Barlow (body) via Google Fonts CDN
+- Clean, professional, premium feel — not generic, not templated looking
+- Smooth hover animations on cards and buttons (translateY lift, border reveals)
+- Fully mobile responsive — hamburger menu, stacked columns, tap-to-call on all phone numbers
+- Smooth scroll
+- JS auto-updates copyright year
+- Active nav highlighting on scroll
+
+OUTPUT: One complete index.html file only. No explanation, no markdown fences, just raw HTML ready to drop into Replit and deploy to Vercel.
