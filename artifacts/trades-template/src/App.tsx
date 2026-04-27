@@ -24,7 +24,7 @@
 // ============================================
 
 import React, { useState, useEffect } from "react";
-import { PhoneCall, ShieldCheck, Wrench, Menu, X, MapPin, ChevronRight, Star, ArrowRight, Zap, MessageSquare } from "lucide-react";
+import { PhoneCall, ShieldCheck, Wrench, Menu, X, MapPin, ChevronRight, Star, ArrowRight, Zap, MessageSquare, Mail, MessageCircle } from "lucide-react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -302,83 +302,62 @@ function LandingPage() {
       {/* Contact Section */}
       <section id="contact" className="py-24 bg-card border-t border-white/5">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div>
-              <h2 className="text-primary font-bold tracking-widest uppercase mb-4 text-sm flex items-center gap-2">
-                <PhoneCall className="w-4 h-4" /> Get In Touch
-              </h2>
-              <h3 className="text-4xl md:text-6xl font-condensed font-bold uppercase tracking-wide mb-6">Request Service</h3>
-              <p className="text-muted-foreground text-lg mb-10">Fill out the form below or call us directly for immediate assistance. We aim to respond to all inquiries within 15 minutes during business hours.</p>
-              
-              <div className="space-y-6 mb-10">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-background border border-white/10 rounded flex items-center justify-center shrink-0 text-primary">
-                    <PhoneCall className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Call Us</div>
-                    <a href="tel:+15616357568" className="text-2xl font-condensed font-bold text-white hover:text-primary transition-colors">(561) 635-7568</a>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-background border border-white/10 rounded flex items-center justify-center shrink-0 text-primary">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Service Area</div>
-                    <div className="text-lg text-white font-medium">Loxahatchee, Royal Palm Beach & Palm Beach County, FL</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-background border border-white/10 rounded flex items-center justify-center shrink-0 text-primary">
-                    <Zap className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Hours</div>
-                    <div className="text-lg text-white font-medium">Open 24 Hours, 7 Days a Week</div>
-                  </div>
-                </div>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-primary font-bold tracking-widest uppercase mb-4 text-sm flex items-center justify-center gap-2">
+              <PhoneCall className="w-4 h-4" /> Get In Touch
+            </h2>
+            <h3 className="text-4xl md:text-6xl font-condensed font-bold uppercase tracking-wide mb-4">Ready to Help, Right Now</h3>
+            <p className="text-muted-foreground text-lg">Call, text, or email us — we respond fast, 24 hours a day, 7 days a week.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
+            <a href="tel:+15616357568" className="group bg-primary hover:bg-primary/90 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2 shadow-[0_0_30px_rgba(232,64,28,0.3)]">
+              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
+                <PhoneCall className="w-8 h-8 text-white" />
+              </div>
+              <div className="font-condensed text-sm font-bold uppercase tracking-widest text-white/70">Call Us</div>
+              <div className="font-condensed text-3xl font-black text-white uppercase tracking-wide leading-tight">(561) 635-7568</div>
+              <div className="text-white/60 text-sm font-medium">Tap to call instantly</div>
+            </a>
+
+            <a href="sms:+15616357568" className="group bg-background border border-white/10 hover:border-primary/50 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-8 h-8 text-primary" />
+              </div>
+              <div className="font-condensed text-sm font-bold uppercase tracking-widest text-muted-foreground">Text Us</div>
+              <div className="font-condensed text-3xl font-black text-white uppercase tracking-wide leading-tight">(561) 635-7568</div>
+              <div className="text-muted-foreground text-sm font-medium">Tap to open messages</div>
+            </a>
+
+            <a href="mailto:info@nexteraplumbing.com" className="group bg-background border border-white/10 hover:border-primary/50 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+              <div className="font-condensed text-sm font-bold uppercase tracking-widest text-muted-foreground">Email Us</div>
+              <div className="font-condensed text-xl font-black text-white tracking-wide leading-tight break-all">info@nexteraplumbing.com</div>
+              <div className="text-muted-foreground text-sm font-medium">We reply within hours</div>
+            </a>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-center items-center gap-10 max-w-3xl mx-auto pt-10 border-t border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-background border border-white/10 rounded flex items-center justify-center shrink-0 text-primary">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Service Area</div>
+                <div className="text-white font-medium">Loxahatchee, Royal Palm Beach & Palm Beach County, FL</div>
               </div>
             </div>
-            
-            <div className="bg-background p-8 md:p-10 rounded border border-white/5">
-              <form action="https://formspree.io/f/REPLACE_WITH_ID" method="POST" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">First Name</label>
-                    <input type="text" name="firstName" required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Last Name</label>
-                    <input type="text" name="lastName" required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Phone</label>
-                    <input type="tel" name="phone" required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Email</label>
-                    <input type="email" name="email" required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Service Needed</label>
-                  <select name="service" required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none">
-                    <option value="" disabled>Select a service...</option>
-                    {SERVICES.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Message</label>
-                  <textarea name="message" rows={4} required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"></textarea>
-                </div>
-                <button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,64,28,0.2)]">
-                  Submit Request
-                </button>
-              </form>
+            <div className="hidden md:block w-px h-12 bg-white/10"></div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-background border border-white/10 rounded flex items-center justify-center shrink-0 text-primary">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Hours</div>
+                <div className="text-white font-medium">Open 24 Hours, 7 Days a Week</div>
+              </div>
             </div>
           </div>
         </div>
