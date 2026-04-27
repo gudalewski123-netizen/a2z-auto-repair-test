@@ -1,5 +1,30 @@
+// ============================================
+// CLIENT SETUP CHECKLIST — FIND & REPLACE ALL
+// ============================================
+// [[BUSINESS_NAME]]          → Full business name (e.g. Peak Flow Plumbing)
+// [[TRADE_TYPE]]             → Type of trade (Plumbing, HVAC, Electrical, etc.)
+// [[PHONE_DISPLAY]]          → (561) 555-0000
+// [[PHONE_RAW]]              → +15615550000
+// [[SERVICE_AREA]]           → Cities/counties served
+// [[LICENSE_NUMBER]]         → Contractor license number
+// [[BUSINESS_HOURS]]         → Mon-Sat 7am-6pm
+// [[YEARS_IN_BUSINESS]]      → Number — leave blank or 0 to hide the badge entirely
+// [[OWNER_BIO_PARAGRAPH_1]]  → First bio paragraph
+// [[OWNER_BIO_PARAGRAPH_2]]  → Second bio paragraph
+// [[HERO_LINE_1]]            → First headline line
+// [[HERO_LINE_2]]            → Second headline line (renders in accent color)
+// [[HERO_SUBHEADLINE]]       → Hero paragraph text
+// [[CTA_HEADLINE]]           → Mid-page CTA banner headline
+// [[CTA_SUBTEXT]]            → CTA banner subtext
+// [[SERVICE_1]] – [[SERVICE_6]]           → Service names
+// [[SERVICE_1_DESC]] – [[SERVICE_6_DESC]] → Service descriptions
+// [[REVIEW_1_TEXT]] – [[REVIEW_3_TEXT]]   → Paste real Google reviews or delete entire reviews section + nav link
+// [[REVIEW_1_NAME]] – [[REVIEW_3_NAME]]   → Reviewer names
+// FORMSPREE ID               → Replace in form action URL: https://formspree.io/f/REPLACE_WITH_ID
+// ============================================
+
 import React, { useState, useEffect } from "react";
-import { PhoneCall, Clock, ShieldCheck, Wrench, Menu, X, MapPin, ChevronRight, Star, ArrowRight } from "lucide-react";
+import { PhoneCall, ShieldCheck, Wrench, Menu, X, MapPin, ChevronRight, Star, ArrowRight, Zap, MessageSquare } from "lucide-react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,31 +33,34 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const queryClient = new QueryClient();
 
 const SERVICES = [
-  "Emergency Repairs",
-  "Water Heater Installation & Repair",
-  "Drain Cleaning & Unclogging",
-  "Leak Detection & Repair",
-  "Pipe Replacement",
-  "Bathroom & Kitchen Plumbing",
+  { name: "[[SERVICE_1]]", desc: "[[SERVICE_1_DESC]]" },
+  { name: "[[SERVICE_2]]", desc: "[[SERVICE_2_DESC]]" },
+  { name: "[[SERVICE_3]]", desc: "[[SERVICE_3_DESC]]" },
+  { name: "[[SERVICE_4]]", desc: "[[SERVICE_4_DESC]]" },
+  { name: "[[SERVICE_5]]", desc: "[[SERVICE_5_DESC]]" },
+  { name: "[[SERVICE_6]]", desc: "[[SERVICE_6_DESC]]" },
 ];
 
+// PASTE REAL CLIENT REVIEWS HERE — if client has no reviews yet, delete this entire section and the reviews nav link
 const REVIEWS = [
   {
-    text: "Had a burst pipe at 2am and called Peak Flow. Tech was at my door in 40 minutes, fixed it fast and kept everything clean. Total lifesaver.",
-    author: "Carlos M.",
+    text: "[[REVIEW_1_TEXT]]",
+    author: "[[REVIEW_1_NAME]]",
     source: "Google Review"
   },
   {
-    text: "Replaced our old water heater same day we called. Pricing was upfront, no surprises on the invoice. Will definitely use again.",
-    author: "Sarah T.",
+    text: "[[REVIEW_2_TEXT]]",
+    author: "[[REVIEW_2_NAME]]",
     source: "Google Review"
   },
   {
-    text: "These guys fixed a leak three other plumbers couldn't find. Thorough, professional, and actually explained what they were doing. Highly recommend.",
-    author: "James R.",
+    text: "[[REVIEW_3_TEXT]]",
+    author: "[[REVIEW_3_NAME]]",
     source: "Google Review"
   }
 ];
+
+const YEARS_IN_BUSINESS = "[[YEARS_IN_BUSINESS]]";
 
 function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,40 +82,21 @@ function LandingPage() {
     }
   };
 
+  const showYearsBadge = YEARS_IN_BUSINESS && YEARS_IN_BUSINESS !== "0" && YEARS_IN_BUSINESS !== "[[YEARS_IN_BUSINESS]]";
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground selection:bg-primary selection:text-white">
-      {/* Top Bar */}
-      <div className="hidden md:flex justify-between items-center py-2 px-8 bg-card border-b border-white/5 text-sm font-medium">
-        <div className="flex items-center gap-6 text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            <span>Mon–Sat 7am–8pm | <span className="text-white font-bold">24/7 Emergency</span></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span>Miami-Dade, Broward & Palm Beach</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-muted-foreground">Lic# FL-CFC-1234567</span>
-          <div className="flex items-center gap-1 text-yellow-500">
-            <Star className="w-4 h-4 fill-current" />
-            <span className="text-white font-bold ml-1">4.9</span>
-            <span className="text-muted-foreground text-xs">(312 Reviews)</span>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-background/95 backdrop-blur-md border-b border-white/10 py-4 shadow-2xl' : 'bg-transparent py-6 md:top-[41px]'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-background/95 backdrop-blur-md border-b border-white/10 py-4 shadow-2xl' : 'bg-transparent py-6'}`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('hero')}>
             <div className="w-10 h-10 bg-primary rounded flex items-center justify-center">
               <Wrench className="text-white w-6 h-6" />
             </div>
             <div>
-              <div className="font-condensed text-2xl font-bold leading-none tracking-wider text-white uppercase">Peak Flow</div>
-              <div className="font-condensed text-primary text-sm font-bold tracking-widest uppercase leading-none">Plumbing</div>
+              <div className="font-condensed text-2xl font-bold leading-none tracking-wider text-white uppercase">[[BUSINESS_NAME]]</div>
+              <div className="font-condensed text-primary text-sm font-bold tracking-widest uppercase leading-none">[[TRADE_TYPE]]</div>
             </div>
           </div>
 
@@ -96,9 +105,9 @@ function LandingPage() {
             <button onClick={() => scrollTo('services')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Services</button>
             <button onClick={() => scrollTo('about')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">About</button>
             <button onClick={() => scrollTo('reviews')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Reviews</button>
-            <a href="tel:+13055550142" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,64,28,0.3)]">
+            <a href="tel:[[PHONE_RAW]]" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,64,28,0.3)]">
               <PhoneCall className="w-5 h-5" />
-              (305) 555-0142
+              [[PHONE_DISPLAY]]
             </a>
           </div>
 
@@ -116,9 +125,9 @@ function LandingPage() {
           <button onClick={() => scrollTo('about')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">About</button>
           <button onClick={() => scrollTo('reviews')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">Reviews</button>
           <button onClick={() => scrollTo('contact')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">Contact</button>
-          <a href="tel:+13055550142" className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold mt-4">
+          <a href="tel:[[PHONE_RAW]]" className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold mt-4">
             <PhoneCall className="w-6 h-6" />
-            (305) 555-0142
+            [[PHONE_DISPLAY]]
           </a>
         </div>
       )}
@@ -126,44 +135,50 @@ function LandingPage() {
       {/* Hero Section */}
       <section id="hero" className="relative min-h-[90vh] flex items-center pt-20">
         <div className="absolute inset-0 z-0">
-          <img src="/hero-bg.png" alt="Plumber working" className="w-full h-full object-cover opacity-40" />
+          <img src="/hero-bg.png" alt="Trades professional working" className="w-full h-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
         </div>
         
         <div className="container mx-auto px-6 relative z-10 py-20">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 px-4 py-1.5 rounded-full text-primary font-bold text-sm mb-6 uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" />
-              15+ Years of Excellence
-            </div>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-condensed uppercase tracking-tight leading-[0.9] mb-6">
-              When the pipes burst, <br/>
-              <span className="text-primary">We show up.</span>
+              [[HERO_LINE_1]] <br/>
+              <span className="text-primary">[[HERO_LINE_2]]</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed">
-              Premium plumbing services for Miami-Dade, Broward & Palm Beach. Fast, dependable, no BS. Over 5,000 jobs completed by professionals who take pride in the craft.
+              [[HERO_SUBHEADLINE]]
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="tel:+13055550142" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(232,64,28,0.4)]">
+              <a href="tel:[[PHONE_RAW]]" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(232,64,28,0.4)]">
                 <PhoneCall className="w-6 h-6" />
-                Call (305) 555-0142
+                Call [[PHONE_DISPLAY]]
               </a>
               <button onClick={() => scrollTo('contact')} className="flex items-center justify-center gap-3 bg-card hover:bg-card/80 border border-white/10 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1">
                 Book Service
               </button>
             </div>
-            <div className="mt-12 flex items-center gap-8">
-              <div>
-                <div className="font-condensed text-4xl font-bold text-white">5,000+</div>
-                <div className="text-muted-foreground text-sm uppercase tracking-wider font-bold">Jobs Done</div>
-              </div>
-              <div className="w-px h-12 bg-white/10"></div>
-              <div>
-                <div className="font-condensed text-4xl font-bold text-white flex items-center gap-2">
-                  4.9 <Star className="w-6 h-6 text-yellow-500 fill-current" />
+            {/* Trust Badges — no numbers required, works for any new business */}
+            <div className="mt-12 flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2 font-condensed font-bold text-lg uppercase tracking-wide">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-                <div className="text-muted-foreground text-sm uppercase tracking-wider font-bold">Google Rating</div>
+                Licensed &amp; Insured
+              </div>
+              <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
+              <div className="flex items-center gap-2 font-condensed font-bold text-lg uppercase tracking-wide">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                Free Estimates
+              </div>
+              <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
+              <div className="flex items-center gap-2 font-condensed font-bold text-lg uppercase tracking-wide">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                  <Zap className="w-4 h-4" />
+                </div>
+                Fast Response Time
               </div>
             </div>
           </div>
@@ -177,7 +192,7 @@ function LandingPage() {
             <h2 className="text-primary font-bold tracking-widest uppercase mb-4 text-sm flex items-center justify-center gap-2">
               <Wrench className="w-4 h-4" /> Our Expertise
             </h2>
-            <h3 className="text-4xl md:text-5xl font-condensed font-bold uppercase tracking-wide">Comprehensive Plumbing Solutions</h3>
+            <h3 className="text-4xl md:text-5xl font-condensed font-bold uppercase tracking-wide">What We Do Best</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -187,8 +202,8 @@ function LandingPage() {
                 <div className="w-14 h-14 bg-background border border-white/10 rounded flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-primary">
                   <ShieldCheck className="w-8 h-8" />
                 </div>
-                <h4 className="text-2xl font-condensed font-bold uppercase tracking-wide mb-3">{service}</h4>
-                <p className="text-muted-foreground mb-6 flex-grow">Professional, code-compliant service that gets the job done right the first time. No shortcuts.</p>
+                <h4 className="text-2xl font-condensed font-bold uppercase tracking-wide mb-3">{service.name}</h4>
+                <p className="text-muted-foreground mb-6 flex-grow">{service.desc}</p>
                 <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-sm mt-auto">
                   Learn More <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -204,11 +219,14 @@ function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
               <div className="absolute -inset-4 border border-primary/20 rounded translate-x-4 translate-y-4"></div>
-              <img src="/team-photo.png" alt="Peak Flow Plumbing Professional" className="w-full h-auto rounded relative z-10 grayscale-[0.2] hover:grayscale-0 transition-all duration-500" />
-              <div className="absolute bottom-8 -right-8 bg-primary p-6 rounded shadow-2xl z-20 hidden md:block">
-                <div className="font-condensed text-5xl font-black text-white leading-none mb-1">15+</div>
-                <div className="text-white/80 font-bold uppercase tracking-wider text-sm">Years Experience</div>
-              </div>
+              <img src="/team-photo.png" alt="[[BUSINESS_NAME]] Professional" className="w-full h-auto rounded relative z-10 grayscale-[0.2] hover:grayscale-0 transition-all duration-500" />
+              {/* Years badge — only renders if YEARS_IN_BUSINESS is set to a real non-zero value */}
+              {showYearsBadge && (
+                <div className="absolute bottom-8 -right-8 bg-primary p-6 rounded shadow-2xl z-20 hidden md:block">
+                  <div className="font-condensed text-5xl font-black text-white leading-none mb-1">{YEARS_IN_BUSINESS}+</div>
+                  <div className="text-white/80 font-bold uppercase tracking-wider text-sm">Years Experience</div>
+                </div>
+              )}
             </div>
             <div>
               <h2 className="text-primary font-bold tracking-widest uppercase mb-4 text-sm flex items-center gap-2">
@@ -216,10 +234,10 @@ function LandingPage() {
               </h2>
               <h3 className="text-4xl md:text-6xl font-condensed font-bold uppercase tracking-wide mb-6 leading-tight">We Don't Cut Corners. <br/>We Fix Them.</h3>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                Founded in Miami 15 years ago, Peak Flow Plumbing was built on a simple premise: show up on time, do the job right, and treat people fairly. We're not a faceless corporate franchise. We're seasoned professionals who take immense pride in our craft.
+                [[OWNER_BIO_PARAGRAPH_1]]
               </p>
               <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
-                Whether it's a midnight emergency or a massive commercial repiping, we bring the same level of discipline and exactness to every call.
+                [[OWNER_BIO_PARAGRAPH_2]]
               </p>
               
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
@@ -233,7 +251,7 @@ function LandingPage() {
                 ))}
               </ul>
               
-              <a href="tel:+13055550142" className="inline-flex items-center gap-2 bg-white text-background hover:bg-white/90 px-8 py-4 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1">
+              <a href="tel:[[PHONE_RAW]]" className="inline-flex items-center gap-2 bg-white text-background hover:bg-white/90 px-8 py-4 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1">
                 Call Us Now <ArrowRight className="w-5 h-5" />
               </a>
             </div>
@@ -245,16 +263,17 @@ function LandingPage() {
       <section className="py-20 relative overflow-hidden bg-primary">
         <div className="absolute inset-0 bg-[url('/services-bg.png')] opacity-10 object-cover bg-center mix-blend-overlay"></div>
         <div className="container mx-auto px-6 relative z-10 text-center">
-          <h2 className="text-4xl md:text-6xl font-condensed font-black uppercase tracking-wide text-white mb-6">Need a Plumber Right Now?</h2>
-          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto font-medium">Our emergency dispatch is standing by 24/7. Don't wait for the damage to get worse.</p>
-          <a href="tel:+13055550142" className="inline-flex items-center justify-center gap-3 bg-background hover:bg-background/90 text-white px-10 py-5 rounded font-condensed text-3xl uppercase tracking-wider font-black transition-all hover:scale-105 shadow-2xl">
+          <h2 className="text-4xl md:text-6xl font-condensed font-black uppercase tracking-wide text-white mb-6">[[CTA_HEADLINE]]</h2>
+          <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto font-medium">[[CTA_SUBTEXT]]</p>
+          <a href="tel:[[PHONE_RAW]]" className="inline-flex items-center justify-center gap-3 bg-background hover:bg-background/90 text-white px-10 py-5 rounded font-condensed text-3xl uppercase tracking-wider font-black transition-all hover:scale-105 shadow-2xl">
             <PhoneCall className="w-8 h-8 text-primary" />
-            (305) 555-0142
+            [[PHONE_DISPLAY]]
           </a>
         </div>
       </section>
 
       {/* Reviews Section */}
+      {/* DELETE THIS ENTIRE SECTION (and the Reviews nav link above) if client has no reviews yet */}
       <section id="reviews" className="py-24 bg-background relative">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -298,8 +317,8 @@ function LandingPage() {
                     <PhoneCall className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Call Us 24/7</div>
-                    <a href="tel:+13055550142" className="text-2xl font-condensed font-bold text-white hover:text-primary transition-colors">(305) 555-0142</a>
+                    <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Call Us</div>
+                    <a href="tel:[[PHONE_RAW]]" className="text-2xl font-condensed font-bold text-white hover:text-primary transition-colors">[[PHONE_DISPLAY]]</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -308,16 +327,16 @@ function LandingPage() {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Service Area</div>
-                    <div className="text-lg text-white font-medium">Miami-Dade, Broward & Palm Beach Counties, FL</div>
+                    <div className="text-lg text-white font-medium">[[SERVICE_AREA]]</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-background border border-white/10 rounded flex items-center justify-center shrink-0 text-primary">
-                    <Clock className="w-5 h-5" />
+                    <Zap className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Hours</div>
-                    <div className="text-lg text-white font-medium">Mon–Sat 7am–8pm <br/><span className="text-primary font-bold">24/7 Emergency Service</span></div>
+                    <div className="text-lg text-white font-medium">[[BUSINESS_HOURS]]</div>
                   </div>
                 </div>
               </div>
@@ -348,8 +367,8 @@ function LandingPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Service Needed</label>
                   <select name="service" required className="w-full bg-card border border-white/10 rounded px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none">
-                    <option value="" disabled selected>Select a service...</option>
-                    {SERVICES.map((s, i) => <option key={i} value={s}>{s}</option>)}
+                    <option value="" disabled>Select a service...</option>
+                    {SERVICES.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -374,15 +393,15 @@ function LandingPage() {
               <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                 <Wrench className="text-white w-4 h-4" />
               </div>
-              <span className="font-condensed text-2xl font-bold uppercase tracking-wider">Peak Flow</span>
+              <span className="font-condensed text-2xl font-bold uppercase tracking-wider">[[BUSINESS_NAME]]</span>
             </div>
             <div className="text-muted-foreground text-sm font-medium">
-              &copy; {new Date().getFullYear()} Peak Flow Plumbing. All rights reserved.
+              &copy; {new Date().getFullYear()} [[BUSINESS_NAME]]. All rights reserved.
             </div>
             <div className="flex gap-6 text-sm font-bold uppercase tracking-wider text-muted-foreground">
               <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
               <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
-              <span className="hover:text-white cursor-pointer transition-colors">License: FL-CFC-1234567</span>
+              <span className="hover:text-white cursor-pointer transition-colors">License: [[LICENSE_NUMBER]]</span>
             </div>
           </div>
         </div>

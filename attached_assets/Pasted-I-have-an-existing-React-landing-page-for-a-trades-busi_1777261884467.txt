@@ -1,0 +1,69 @@
+I have an existing React landing page for a trades business. I need you to make the following specific changes to adapt it for smaller, newer local businesses that may have few or no Google reviews and limited years of experience. Do not rebuild the whole site — only make these targeted changes.
+
+CHANGE 1 — REMOVE STATS THAT EXPOSE WEAK SOCIAL PROOF
+In the hero section, remove the hardcoded "5,000+ Jobs Done" and "4.9 Google Rating" stat blocks entirely. Replace them with 3 simple trust badges in a horizontal row:
+- ✅ Licensed & Insured
+- 💬 Free Estimates
+- ⚡ Fast Response Time
+These require no numbers and apply to any new business.
+
+CHANGE 2 — REMOVE TOP BAR
+Delete the entire top bar div (the one with Clock, MapPin icons showing hours and review count). It exposes review count and rating which a new business won't have. The nav should sit at the very top instead.
+
+CHANGE 3 — MAKE REVIEWS OPTIONAL / PLACEHOLDER READY
+Change the REVIEWS array so each entry uses obvious placeholder text:
+- text: "[[REVIEW_1_TEXT]]"
+- author: "[[REVIEW_1_NAME]]"
+Keep the review cards exactly as they are visually. Add a comment above the array: // PASTE REAL CLIENT REVIEWS HERE — if client has no reviews yet, delete this entire section and the reviews nav link
+
+CHANGE 4 — MAKE THE ABOUT SECTION GENERIC
+Remove all specific numbers (15 years, 5,000 jobs, Miami 15 years ago). Replace with:
+- Badge text: "[[YEARS_IN_BUSINESS]]+ Years of Excellence" — and if [[YEARS_IN_BUSINESS]] is empty or 0, the badge should not render at all (conditional render)
+- About body copy: replace hardcoded paragraphs with [[OWNER_BIO_PARAGRAPH_1]] and [[OWNER_BIO_PARAGRAPH_2]] placeholders
+- The 4 bullet points (Licensed & Insured, Upfront Pricing, etc.) stay as-is — these are universal
+
+CHANGE 5 — MAKE THE CTA BANNER NEUTRAL
+Change "Need a Plumber Right Now?" to "[[CTA_HEADLINE]]" placeholder. Change the subtext to "[[CTA_SUBTEXT]]" placeholder. This way it works for any trade, not just plumbing.
+
+CHANGE 6 — CONVERT ALL HARDCODED BUSINESS INFO TO PLACEHOLDERS
+Do a full pass and replace every instance of:
+- "Peak Flow" → [[BUSINESS_NAME]]
+- "Plumbing" (subtitle) → [[TRADE_TYPE]]
+- "(305) 555-0142" / "+13055550142" → [[PHONE_DISPLAY]] and [[PHONE_RAW]]
+- "Miami-Dade, Broward & Palm Beach" → [[SERVICE_AREA]]
+- "FL-CFC-1234567" → [[LICENSE_NUMBER]]
+- "Mon–Sat 7am–8pm" → [[BUSINESS_HOURS]]
+- SERVICES array items → [[SERVICE_1]] through [[SERVICE_6]]
+- Service descriptions → [[SERVICE_1_DESC]] through [[SERVICE_6_DESC]]
+- Hero headline lines → [[HERO_LINE_1]] and [[HERO_LINE_2]]
+- Hero subheadline paragraph → [[HERO_SUBHEADLINE]]
+
+CHANGE 7 — ADD COMMENT BLOCK AT TOP OF FILE
+At the very top of the file above all imports, add this comment block:
+
+// ============================================
+// CLIENT SETUP CHECKLIST — FIND & REPLACE ALL
+// ============================================
+// [[BUSINESS_NAME]]     → Full business name
+// [[TRADE_TYPE]]        → Type of trade (Plumbing, HVAC, etc.)
+// [[PHONE_DISPLAY]]     → (561) 555-0000
+// [[PHONE_RAW]]         → +15615550000
+// [[SERVICE_AREA]]      → Cities/counties served
+// [[LICENSE_NUMBER]]    → Contractor license number
+// [[BUSINESS_HOURS]]    → Mon-Sat 7am-6pm
+// [[YEARS_IN_BUSINESS]] → Number or leave blank to hide badge
+// [[OWNER_BIO_PARAGRAPH_1]] → First bio paragraph
+// [[OWNER_BIO_PARAGRAPH_2]] → Second bio paragraph
+// [[HERO_LINE_1]]       → First headline line
+// [[HERO_LINE_2]]       → Second headline line (accent color)
+// [[HERO_SUBHEADLINE]]  → Hero paragraph text
+// [[CTA_HEADLINE]]      → Mid-page CTA banner headline
+// [[CTA_SUBTEXT]]       → CTA banner subtext
+// [[SERVICE_1-6]]       → Service names
+// [[SERVICE_1-6_DESC]]  → Service descriptions
+// [[REVIEW_1-3_TEXT]]   → Paste real Google reviews or delete section
+// [[REVIEW_1-3_NAME]]   → Reviewer names
+// FORMSPREE ID          → Replace in form action URL
+// ============================================
+
+Do not change anything else. Keep all styling, animations, layout, and component structure exactly as is.
