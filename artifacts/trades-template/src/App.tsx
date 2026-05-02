@@ -1,27 +1,5 @@
-// ============================================
-// CLIENT SETUP CHECKLIST — FIND & REPLACE ALL
-// ============================================
-// Royalty Concrete & Remodeling          → Full business name (e.g. Peak Flow Plumbing)
-// Plumbing             → Type of trade (Plumbing, HVAC, Electrical, etc.)
-// (786) 788-6001          → (561) 555-0000
-// +17867886001              → +15615550000
-// Miami & All of Miami-Dade County, FL           → Cities/counties served
-// Licensed & Insured         → Contractor license number
-// Mon–Sat, Extended Hours Available         → Mon-Sat 7am-6pm
-// [[YEARS_IN_BUSINESS]]      → Number — leave blank or 0 to hide the badge entirely
-// Royalty Concrete & Remodeling Services LLC has been transforming Miami homes and businesses with quality concrete and remodeling work. Based in the heart of Miami, we serve homeowners, contractors, and commercial clients throughout Miami-Dade County.  → First bio paragraph
-// From driveways, patios, and foundations to kitchen and bathroom remodels — every project gets the same attention to detail. We show up on time, communicate clearly, and finish what we start.  → Second bio paragraph
-// Built To            → First headline line
-// Last A Lifetime            → Second headline line (renders in accent color)
-// From custom driveways and patios to full home remodels — Royalty Concrete & Remodeling brings expert craftsmanship to every project across Miami and Miami-Dade County. Quality work, honest pricing, on time.       → Hero paragraph text
-// Ready to Build Something Great?           → Mid-page CTA banner headline
-// Get a free quote today. Whether it's a new driveway, a backyard patio, or a full remodel — we'll handle it from start to finish.            → CTA banner subtext
-// [[SERVICE_1]] – [[SERVICE_6]]           → Service names
-// [[SERVICE_1_DESC]] – [[SERVICE_6_DESC]] → Service descriptions
-// [[REVIEW_1_TEXT]] – [[REVIEW_3_TEXT]]   → Paste real Google reviews or delete entire reviews section + nav link
-// [[REVIEW_1_NAME]] – [[REVIEW_3_NAME]]   → Reviewer names
-// FORMSPREE ID               → Replace in form action URL: https://formspree.io/f/REPLACE_WITH_ID
-// ============================================
+// Royalty Concrete & Remodeling Services LLC — Miami, FL — Mockup
+
 
 import React, { useState, useEffect } from "react";
 import { PhoneCall, ShieldCheck, Hammer, Menu, X, MapPin, ChevronRight, Star, ArrowRight, Zap, MessageSquare, Mail, MessageCircle } from "lucide-react";
@@ -356,7 +334,7 @@ function LandingPage() {
               </div>
               <div>
                 <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Hours</div>
-                <div className="text-white font-medium">Mon–Sat, Extended Hours Available</div>
+                <div className="text-white font-medium">Sat 8:00 AM – 12:00 AM • Call for Daily Hours</div>
               </div>
             </div>
           </div>
