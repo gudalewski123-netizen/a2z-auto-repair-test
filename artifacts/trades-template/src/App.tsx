@@ -218,7 +218,7 @@ function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
               <div className="absolute -inset-4 border border-primary/20 rounded translate-x-4 translate-y-4"></div>
-              <img src="/team-photo.png" alt="Royalty Concrete & Remodeling Professional" className="w-full h-auto rounded relative z-10 grayscale-[0.2] hover:grayscale-0 transition-all duration-500" />
+              <img src="/team-photo.jpg" alt="Royalty Concrete & Remodeling pool patio project in Miami" className="w-full h-auto rounded relative z-10 hover:scale-[1.02] transition-all duration-500" />
               {/* Years badge — only renders if YEARS_IN_BUSINESS is set to a real non-zero value */}
               {showYearsBadge && (
                 <div className="absolute bottom-8 -right-8 bg-primary p-6 rounded shadow-2xl z-20 hidden md:block">
