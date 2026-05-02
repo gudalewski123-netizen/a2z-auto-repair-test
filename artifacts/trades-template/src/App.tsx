@@ -104,7 +104,7 @@ function LandingPage() {
             <button onClick={() => scrollTo('services')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Services</button>
             <button onClick={() => scrollTo('about')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">About</button>
             <button onClick={() => scrollTo('reviews')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Reviews</button>
-            <a href="tel:+17867886001" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,64,28,0.3)]">
+            <a href="tel:+17867886001" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(238,90,68,0.3)]">
               <PhoneCall className="w-5 h-5" />
               (786) 788-6001
             </a>
@@ -149,7 +149,7 @@ function LandingPage() {
               From custom driveways and patios to full home remodels — Royalty Concrete & Remodeling brings expert craftsmanship to every project across Miami and Miami-Dade County. Quality work, honest pricing, on time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="tel:+17867886001" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(232,64,28,0.4)]">
+              <a href="tel:+17867886001" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(238,90,68,0.4)]">
                 <PhoneCall className="w-6 h-6" />
                 Call (786) 788-6001
               </a>
@@ -311,7 +311,7 @@ function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-            <a href="tel:+17867886001" className="group bg-primary hover:bg-primary/90 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2 shadow-[0_0_30px_rgba(232,64,28,0.3)]">
+            <a href="tel:+17867886001" className="group bg-primary hover:bg-primary/90 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2 shadow-[0_0_30px_rgba(238,90,68,0.3)]">
               <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
                 <PhoneCall className="w-8 h-8 text-white" />
               </div>

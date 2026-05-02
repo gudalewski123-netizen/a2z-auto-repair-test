@@ -5,16 +5,16 @@ outputs = []
 id = "_-sfKoHwLo0Vo5g_W3bjZ"
 uri = "file://artifacts/trades-template/public/hero-bg.png"
 type = "image"
-title = "Plumber working hero background"
+title = "generated_image"
 
 [[generated]]
 id = "-MulZweQoBJXl3KrXoBAp"
 uri = "file://artifacts/trades-template/public/team-photo.png"
 type = "image"
-title = "Professional plumber portrait"
+title = "generated_image"
 
 [[generated]]
 id = "Za50SDGxx5COsJF2qN_H_"
 uri = "file://artifacts/trades-template/public/services-bg.png"
 type = "image"
-title = "Modern plumbing pipes"
+title = "generated_image"
