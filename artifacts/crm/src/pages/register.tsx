@@ -35,7 +35,7 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">VroomCRM</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">TradeStack CRM</CardTitle>
           <CardDescription>Create your business account</CardDescription>
         </CardHeader>
         <CardContent>

@@ -20,7 +20,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen overflow-hidden bg-background w-full">
         <Sidebar>
           <SidebarContent>
-            <div className="p-4 font-bold text-xl text-primary tracking-tight">VroomCRM</div>
+            <div className="p-4 font-bold text-xl text-primary tracking-tight">TradeStack CRM</div>
             {user && (
               <div className="px-4 pb-2 text-xs text-muted-foreground truncate">
                 {user.businessName}
