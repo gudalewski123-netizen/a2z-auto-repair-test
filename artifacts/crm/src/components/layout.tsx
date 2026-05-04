@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Columns, LogOut, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Users, Columns, LogOut, Menu, X, ChevronRight, Sun, Moon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -78,6 +78,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="p-3 mt-auto space-y-1">
+            <a
+              href="/"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200 w-full"
+            >
+              <ExternalLink className="h-5 w-5 shrink-0" />
+              <span>Back to Main Site</span>
+            </a>
             <button
               onClick={toggleTheme}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200 w-full"
