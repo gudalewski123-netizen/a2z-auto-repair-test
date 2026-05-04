@@ -32,10 +32,10 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">TradeStack CRM</CardTitle>
+          <a href="/" className="text-2xl font-bold text-primary hover:underline">TradeStack CRM</a>
           <CardDescription>Create your business account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,6 +90,9 @@ export default function Register() {
           </form>
         </CardContent>
       </Card>
+      <a href="/" className="mt-4 text-sm text-muted-foreground hover:text-primary hover:underline">
+        Back to Home
+      </a>
     </div>
   );
 }
