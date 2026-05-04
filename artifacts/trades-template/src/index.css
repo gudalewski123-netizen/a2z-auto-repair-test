@@ -37,18 +37,18 @@
   --card-foreground: 35 30% 96%;
   --card-border: 180 35% 30%;
 
-  --primary: 8 88% 58%; /* Miami sunset coral */
+  --primary: 217 91% 55%; /* bold blue */
   --primary-foreground: 0 0% 100%;
 
   --muted: 215 28% 13%;
   --muted-foreground: 35 15% 70%;
 
-  --accent: 175 75% 50%; /* turquoise teal */
-  --accent-foreground: 215 35% 8%;
+  --accent: 199 89% 48%; /* sky blue accent */
+  --accent-foreground: 0 0% 100%;
 
   --border: 215 25% 20%;
   --input: 215 25% 20%;
-  --ring: 8 88% 58%;
+  --ring: 217 91% 55%;
 
   --app-font-sans: 'Barlow', sans-serif;
   --app-font-condensed: 'Barlow Condensed', sans-serif;
@@ -61,15 +61,15 @@
   --card: 215 28% 13%;
   --card-foreground: 35 30% 96%;
   --card-border: 180 35% 30%;
-  --primary: 8 88% 58%;
+  --primary: 217 91% 55%;
   --primary-foreground: 0 0% 100%;
   --muted: 215 28% 13%;
   --muted-foreground: 35 15% 70%;
-  --accent: 175 75% 50%;
-  --accent-foreground: 215 35% 8%;
+  --accent: 199 89% 48%;
+  --accent-foreground: 0 0% 100%;
   --border: 215 25% 20%;
   --input: 215 25% 20%;
-  --ring: 8 88% 58%;
+  --ring: 217 91% 55%;
 }
 
 @keyframes ken-burns {
