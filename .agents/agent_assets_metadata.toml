@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "_-sfKoHwLo0Vo5g_W3bjZ"
@@ -18,3 +17,9 @@ id = "Za50SDGxx5COsJF2qN_H_"
 uri = "file://artifacts/trades-template/public/services-bg.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "G-R51bga8P1F-atJw5ZhZ"
+uri = "file://CRM_ADMIN_INTEGRATION_PROMPT.md"
+type = "text"
+title = "CRM Admin Integration Prompt"

@@ -42,3 +42,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 JWT_SECRET = "b3b0d02377f1cfecbadbd6b26d0517cfc93f51ca64219595d19d22698a63fa46"
+ADMIN_API_KEY = "01829d51fff389345dd8c8a6beacd886049f54bb388e7f44914f7347d508975c"

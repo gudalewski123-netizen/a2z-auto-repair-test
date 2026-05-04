@@ -105,6 +105,44 @@ router.post("/auth/logout", (_req, res): void => {
   res.json({ success: true });
 });
 
+router.patch("/auth/password", requireAuth, async (req, res): Promise<void> => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: "Current password and new password are required" });
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: "New password must be at least 6 characters" });
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, req.userId!));
+
+  if (!user) {
+    res.status(401).json({ error: "User not found" });
+    return;
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) {
+    res.status(401).json({ error: "Current password is incorrect" });
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await db
+    .update(usersTable)
+    .set({ password: hashedPassword })
+    .where(eq(usersTable.id, req.userId!));
+
+  res.json({ success: true });
+});
+
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const [user] = await db
     .select({
