@@ -106,6 +106,9 @@ function LandingPage() {
             <PhoneCall className="w-6 h-6" />
             (786) 788-6001
           </a>
+          <a href="/crm/" className="flex items-center justify-center gap-2 text-muted-foreground hover:text-white px-6 py-3 rounded border border-white/10 font-condensed text-lg uppercase tracking-wider mt-2 transition-colors">
+            Admin Login
+          </a>
         </div>
       )}
 

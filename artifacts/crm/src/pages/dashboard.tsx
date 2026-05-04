@@ -32,13 +32,13 @@ export default function Dashboard() {
   })) || [];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-4 md:gap-6 w-full max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Overview</h1>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <MetricCard
           title="Total Leads"
           value={summary?.totalLeads}
@@ -86,13 +86,13 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="glass rounded-2xl lg:col-span-2">
           <CardHeader>
             <CardTitle>Pipeline Breakdown</CardTitle>
             <CardDescription>Number of contacts per stage</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[250px] md:h-[300px]">
             {isPipelineLoading ? <Skeleton className="w-full h-full" /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
@@ -104,14 +104,14 @@ export default function Dashboard() {
               </ResponsiveContainer>
             )}
           </CardContent>
-        </Card>
+        </div>
 
-        <Card>
+        <div className="glass rounded-2xl">
           <CardHeader>
             <CardTitle>Lead Sources</CardTitle>
             <CardDescription>Where your leads come from</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[250px] md:h-[300px]">
             {isSourceLoading ? <Skeleton className="w-full h-full" /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -133,11 +133,11 @@ export default function Dashboard() {
               </ResponsiveContainer>
             )}
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <div className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
           <CardDescription>Latest actions across your CRM</CardDescription>
@@ -179,25 +179,23 @@ export default function Dashboard() {
             )}
           </ScrollArea>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }
 
 function MetricCard({ title, value, icon: Icon, isLoading, className = "" }: any) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+    <div className="glass rounded-2xl p-4 md:p-5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs md:text-sm font-medium text-muted-foreground">{title}</span>
         <Icon className={`h-4 w-4 text-muted-foreground ${className}`} />
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <Skeleton className="h-8 w-20" />
-        ) : (
-          <div className={`text-2xl font-bold ${className}`}>{value !== undefined ? value : "-"}</div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+      {isLoading ? (
+        <Skeleton className="h-7 w-16" />
+      ) : (
+        <div className={`text-xl md:text-2xl font-bold ${className}`}>{value !== undefined ? value : "-"}</div>
+      )}
+    </div>
   );
 }

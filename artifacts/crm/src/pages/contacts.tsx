@@ -55,61 +55,63 @@ export default function Contacts() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto h-full">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 md:gap-6 w-full max-w-7xl mx-auto h-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Manage and track all your leads and customers.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Contacts</h1>
+          <p className="text-muted-foreground mt-1 text-sm hidden sm:block">Manage and track all your leads and customers.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={handleExport} size="sm" className="glass-subtle rounded-xl flex-1 sm:flex-none">
+            <Download className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Export</span> CSV
           </Button>
-          <Button asChild>
+          <Button asChild size="sm" className="rounded-xl flex-1 sm:flex-none shadow-md shadow-primary/20">
             <Link href="/leads/new">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-1.5" />
               New Contact
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-lg border shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch glass rounded-2xl p-3 md:p-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, or phone..."
-            className="pl-9 bg-background"
+            placeholder="Search contacts..."
+            className="glass-input pl-9 h-10 rounded-xl"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px] bg-background">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {Object.entries(CONTACT_STATUS_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sourceFilter} onValueChange={setSourceFilter}>
-          <SelectTrigger className="w-[180px] bg-background">
-            <SelectValue placeholder="All Sources" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sources</SelectItem>
-            {Object.entries(CONTACT_SOURCE_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[150px] glass-input rounded-xl h-10">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {Object.entries(CONTACT_STATUS_LABELS).map(([val, label]) => (
+                <SelectItem key={val} value={val}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-full sm:w-[150px] glass-input rounded-xl h-10">
+              <SelectValue placeholder="All Sources" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sources</SelectItem>
+              {Object.entries(CONTACT_SOURCE_LABELS).map(([val, label]) => (
+                <SelectItem key={val} value={val}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="border rounded-lg bg-card flex-1 overflow-auto shadow-sm">
+      <div className="glass rounded-2xl flex-1 overflow-auto">
         <Table>
           <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
             <TableRow>

@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { UserPlus } from "lucide-react";
 
 export default function Register() {
   const { register } = useAuth();
@@ -17,10 +16,6 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
     setLoading(true);
     try {
       await register(email, password, businessName);
@@ -32,31 +27,36 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <a href="/" className="text-2xl font-bold text-primary hover:underline">TradeStack CRM</a>
-          <CardDescription>Create your business account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="crm-bg min-h-screen flex flex-col items-center justify-center p-4 relative">
+      <div className="relative z-10 w-full max-w-md">
+        <div className="glass-strong rounded-2xl p-8 md:p-10">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-primary tracking-tight">TradeStack CRM</h1>
+            <p className="text-muted-foreground mt-2 text-sm">Create your business account</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              <div className="p-3 text-sm text-red-600 bg-red-50/80 backdrop-blur border border-red-200/50 rounded-xl">
                 {error}
               </div>
             )}
+
             <div className="space-y-2">
-              <Label htmlFor="businessName">Business Name</Label>
+              <label className="text-sm font-medium" htmlFor="businessName">Business Name</label>
               <Input
                 id="businessName"
-                placeholder="Acme Auto Detailing"
+                type="text"
+                placeholder="Your Business Name"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 required
+                className="glass-input h-12 rounded-xl px-4 text-base"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <label className="text-sm font-medium" htmlFor="email">Email</label>
               <Input
                 id="email"
                 type="text"
@@ -64,35 +64,54 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="glass-input h-12 rounded-xl px-4 text-base"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <label className="text-sm font-medium" htmlFor="password">Password</label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Min 6 characters"
+                placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                className="glass-input h-12 rounded-xl px-4 text-base"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create Account"}
+
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/20"
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating account...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Create Account
+                </span>
+              )}
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
+
+            <p className="text-center text-sm text-muted-foreground pt-2">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary font-medium hover:underline">
+              <Link href="/login" className="text-primary font-semibold hover:underline">
                 Sign in
               </Link>
             </p>
           </form>
-        </CardContent>
-      </Card>
-      <a href="/" className="mt-4 text-sm text-muted-foreground hover:text-primary hover:underline">
-        Back to Home
-      </a>
+        </div>
+
+        <a href="/" className="block mt-5 text-center text-sm text-muted-foreground hover:text-primary transition-colors">
+          Back to Home
+        </a>
+      </div>
     </div>
   );
 }

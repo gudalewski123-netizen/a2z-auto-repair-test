@@ -62,16 +62,16 @@ export default function Pipeline() {
     <div className="flex flex-col h-full gap-4">
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pipeline</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Drag and drop leads to update their stage.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Pipeline</h1>
+          <p className="text-muted-foreground mt-1 text-sm hidden sm:block">Drag and drop leads to update their stage.</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto pb-4">
+      <div className="flex-1 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-4 h-full min-w-max items-start">
+          <div className="flex gap-3 md:gap-4 h-full min-w-max items-start">
             {PIPELINE_STAGES.map((stage) => (
-              <div key={stage} className="w-[320px] flex flex-col h-full max-h-full bg-muted/40 rounded-xl border border-muted p-2">
+              <div key={stage} className="w-[280px] md:w-[320px] flex flex-col h-full max-h-full glass-subtle rounded-2xl p-2">
                 <div className="p-2 flex items-center justify-between shrink-0">
                   <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     {CONTACT_STATUS_LABELS[stage]}
