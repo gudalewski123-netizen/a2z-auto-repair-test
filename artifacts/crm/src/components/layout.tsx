@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Columns, ClipboardList, LogOut, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Users, Columns, LogOut, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -9,7 +9,6 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Contacts", url: "/contacts", icon: Users },
   { title: "Pipeline", url: "/pipeline", icon: Columns },
-  { title: "Lead Form", url: "/leads/new", icon: ClipboardList },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
