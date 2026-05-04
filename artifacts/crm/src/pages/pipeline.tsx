@@ -13,10 +13,10 @@ import { GripVertical, Phone, Clock } from "lucide-react";
 export default function Pipeline() {
   const { data: contacts, isLoading } = useListContacts();
   const queryClient = useQueryClient();
+  const [mobileStageIndex, setMobileStageIndex] = useState(0);
   const updateStatus = useUpdateContactStatus({
     mutation: {
       onSuccess: () => {
-        // We optimistically updated, but we invalidate just in case
         queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       }
     }
@@ -37,7 +37,6 @@ export default function Pipeline() {
     const contactId = parseInt(draggableId, 10);
     const newStatus = destination.droppableId as any;
 
-    // Optimistic update
     queryClient.setQueryData(["/api/contacts"], (oldData: any) => {
       if (!oldData) return oldData;
       return oldData.map((c: any) =>
@@ -52,13 +51,10 @@ export default function Pipeline() {
     return <div className="p-8 text-center text-muted-foreground">Loading pipeline...</div>;
   }
 
-  // Group contacts by status
   const columns = PIPELINE_STAGES.reduce((acc, stage) => {
     acc[stage] = contacts?.filter(c => c.status === stage) || [];
     return acc;
   }, {} as Record<string, any[]>);
-
-  const [mobileStageIndex, setMobileStageIndex] = useState(0);
   const currentMobileStage = PIPELINE_STAGES[mobileStageIndex];
 
   return (
