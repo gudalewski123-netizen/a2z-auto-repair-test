@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
 import { useState } from "react";
+import { Link } from "wouter";
 import { CONTACT_SOURCE_LABELS } from "@/lib/constants";
 
 const formSchema = z.object({
@@ -60,8 +61,8 @@ export default function LeadsNew() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md border-0 shadow-lg text-center py-12">
+      <div className="crm-bg min-h-screen flex items-center justify-center p-4 relative">
+        <Card className="relative z-10 glass-strong rounded-2xl w-full max-w-md border-0 text-center py-12">
           <CardContent className="flex flex-col items-center space-y-4">
             <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
@@ -82,10 +83,16 @@ export default function LeadsNew() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-xl border-0 shadow-xl overflow-hidden">
+    <div className="crm-bg min-h-screen flex flex-col items-center justify-center p-4 relative">
+      <div className="relative z-10 w-full max-w-xl">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-4 transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Link>
+      </div>
+      <div className="relative z-10 glass-strong rounded-2xl w-full max-w-xl overflow-hidden">
         <div className="bg-primary p-6 text-primary-foreground text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Premium Auto Detailing</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Premium Auto Detailing</h1>
           <p className="mt-2 text-primary-foreground/80 text-sm">Request a quote or book a service today.</p>
         </div>
         <CardContent className="p-6 sm:p-8">
@@ -192,7 +199,7 @@ export default function LeadsNew() {
             </form>
           </Form>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

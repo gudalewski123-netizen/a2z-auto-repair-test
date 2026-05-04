@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Columns, ClipboardList, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Users, Columns, ClipboardList, LogOut, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useTheme } from "@/lib/theme";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -14,6 +15,7 @@ const navItems = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const currentPage = navItems.find(item => item.url === location)?.title || "Dashboard";
@@ -64,7 +66,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     transition-all duration-200
                     ${isActive
                       ? 'glass text-primary shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/30'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/30 dark:hover:bg-white/10'
                     }
                   `}
                 >
@@ -76,10 +78,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="p-3 mt-auto">
+          <div className="p-3 mt-auto space-y-1">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200 w-full"
+            >
+              {theme === "light" ? <Moon className="h-5 w-5 shrink-0" /> : <Sun className="h-5 w-5 shrink-0" />}
+              <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+            </button>
             <button
               onClick={logout}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/30 transition-all duration-200 w-full"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200 w-full"
             >
               <LogOut className="h-5 w-5 shrink-0" />
               <span>Sign Out</span>
@@ -97,7 +106,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
             <div className="font-semibold text-base">{currentPage}</div>
             {user && (
-              <div className="ml-auto text-xs text-muted-foreground bg-white/30 px-3 py-1.5 rounded-full">
+              <div className="ml-auto text-xs text-muted-foreground bg-white/30 dark:bg-white/10 px-3 py-1.5 rounded-full">
                 {user.email}
               </div>
             )}

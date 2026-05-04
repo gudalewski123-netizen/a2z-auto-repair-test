@@ -37,6 +37,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - Features: dashboard with metrics, contacts table with search/filter, pipeline kanban (drag-and-drop via `@hello-pangea/dnd`), lead capture form, contact detail with jobs/activities/follow-ups, CSV export, source tracking
 - **Auth**: Email/password login with bcrypt hashing, JWT cookie sessions (7-day expiry), auto-login persistence
 - **Multi-tenant**: All data tables include `user_id` — each logged-in user sees only their own data
+- **Theme**: Dark/light mode toggle via ThemeProvider context (`src/lib/theme.tsx`), persisted in localStorage. Toggle in sidebar bottom + login/register pages (top-right icon). CSS uses `.dark` class on `<html>` with custom variant `@custom-variant dark (&:is(.dark *))`. Glass classes (`.glass`, `.glass-subtle`, `.glass-strong`, `.glass-sidebar`, `.glass-input`) all have dark variants.
 - React + Vite + Tailwind v4 + shadcn/ui, port 22444, previewPath `/crm/`
 - Uses generated API hooks from `@workspace/api-client-react` (Orval codegen)
 - Pages: login (`/login`), register (`/register`), dashboard (`/`), contacts (`/contacts`), contact detail (`/contacts/:id`), pipeline (`/pipeline`), lead form (`/leads/new` — public, no auth required)

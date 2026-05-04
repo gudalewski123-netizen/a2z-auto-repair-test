@@ -3,10 +3,12 @@ import { useAuth } from "@/lib/auth";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { LogIn, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 
 export default function Login() {
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,6 +29,13 @@ export default function Login() {
 
   return (
     <div className="crm-bg min-h-screen flex flex-col items-center justify-center p-4 relative">
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 z-20 p-2.5 rounded-xl glass hover:scale-105 transition-transform"
+        title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+      >
+        {theme === "light" ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-yellow-400" />}
+      </button>
       <div className="relative z-10 w-full max-w-md">
         <div className="glass-strong rounded-2xl p-8 md:p-10">
           <div className="text-center mb-8">
