@@ -14,15 +14,23 @@ import {
 
 const router: IRouter = Router();
 
-async function recalcRevenue(contactId: number) {
+async function recalcRevenue(contactId: number, userId: number) {
   const result = await db
     .select({ total: sql<string>`COALESCE(SUM(${jobsTable.price}), 0)` })
     .from(jobsTable)
-    .where(eq(jobsTable.contactId, contactId));
+    .where(and(eq(jobsTable.contactId, contactId), eq(jobsTable.userId, userId)));
   await db
     .update(contactsTable)
     .set({ totalRevenue: result[0].total })
-    .where(eq(contactsTable.id, contactId));
+    .where(and(eq(contactsTable.id, contactId), eq(contactsTable.userId, userId)));
+}
+
+async function verifyContactOwnership(contactId: number, userId: number): Promise<boolean> {
+  const [contact] = await db
+    .select({ id: contactsTable.id })
+    .from(contactsTable)
+    .where(and(eq(contactsTable.id, contactId), eq(contactsTable.userId, userId)));
+  return !!contact;
 }
 
 router.get("/contacts/:contactId/jobs", async (req, res): Promise<void> => {
@@ -35,7 +43,7 @@ router.get("/contacts/:contactId/jobs", async (req, res): Promise<void> => {
   const jobs = await db
     .select()
     .from(jobsTable)
-    .where(eq(jobsTable.contactId, params.data.contactId))
+    .where(and(eq(jobsTable.contactId, params.data.contactId), eq(jobsTable.userId, req.userId!)))
     .orderBy(jobsTable.createdAt);
 
   const result = jobs.map((j) => ({ ...j, price: Number(j.price) }));
@@ -55,9 +63,15 @@ router.post("/contacts/:contactId/jobs", async (req, res): Promise<void> => {
     return;
   }
 
+  if (!(await verifyContactOwnership(params.data.contactId, req.userId!))) {
+    res.status(404).json({ error: "Contact not found" });
+    return;
+  }
+
   const [job] = await db
     .insert(jobsTable)
     .values({
+      userId: req.userId!,
       contactId: params.data.contactId,
       serviceType: parsed.data.serviceType,
       price: String(parsed.data.price),
@@ -66,9 +80,10 @@ router.post("/contacts/:contactId/jobs", async (req, res): Promise<void> => {
     })
     .returning();
 
-  await recalcRevenue(params.data.contactId);
+  await recalcRevenue(params.data.contactId, req.userId!);
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     contactId: params.data.contactId,
     action: "job_added",
     details: `Job added: ${parsed.data.serviceType} - $${parsed.data.price}`,
@@ -99,7 +114,7 @@ router.patch("/contacts/:contactId/jobs/:id", async (req, res): Promise<void> =>
   const [job] = await db
     .update(jobsTable)
     .set(updateData)
-    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.contactId, params.data.contactId)))
+    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.contactId, params.data.contactId), eq(jobsTable.userId, req.userId!)))
     .returning();
 
   if (!job) {
@@ -107,7 +122,7 @@ router.patch("/contacts/:contactId/jobs/:id", async (req, res): Promise<void> =>
     return;
   }
 
-  await recalcRevenue(params.data.contactId);
+  await recalcRevenue(params.data.contactId, req.userId!);
   res.json(UpdateJobResponse.parse({ ...job, price: Number(job.price) }));
 });
 
@@ -120,7 +135,7 @@ router.delete("/contacts/:contactId/jobs/:id", async (req, res): Promise<void> =
 
   const [job] = await db
     .delete(jobsTable)
-    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.contactId, params.data.contactId)))
+    .where(and(eq(jobsTable.id, params.data.id), eq(jobsTable.contactId, params.data.contactId), eq(jobsTable.userId, req.userId!)))
     .returning();
 
   if (!job) {
@@ -128,7 +143,7 @@ router.delete("/contacts/:contactId/jobs/:id", async (req, res): Promise<void> =
     return;
   }
 
-  await recalcRevenue(params.data.contactId);
+  await recalcRevenue(params.data.contactId, req.userId!);
   res.sendStatus(204);
 });
 

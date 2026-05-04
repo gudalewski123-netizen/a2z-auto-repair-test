@@ -21,7 +21,7 @@ router.get("/followups", async (req, res): Promise<void> => {
     return;
   }
 
-  const conditions = [];
+  const conditions = [eq(followUpsTable.userId, req.userId!)];
   if (params.data.status) {
     conditions.push(eq(followUpsTable.status, params.data.status));
   }
@@ -30,7 +30,7 @@ router.get("/followups", async (req, res): Promise<void> => {
     conditions.push(eq(followUpsTable.status, "pending"));
   }
 
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const where = and(...conditions);
 
   const followups = await db
     .select({
@@ -63,9 +63,19 @@ router.post("/contacts/:contactId/followups", async (req, res): Promise<void> =>
     return;
   }
 
+  const [ownedContact] = await db
+    .select({ id: contactsTable.id })
+    .from(contactsTable)
+    .where(and(eq(contactsTable.id, params.data.contactId), eq(contactsTable.userId, req.userId!)));
+  if (!ownedContact) {
+    res.status(404).json({ error: "Contact not found" });
+    return;
+  }
+
   const [followup] = await db
     .insert(followUpsTable)
     .values({
+      userId: req.userId!,
       contactId: params.data.contactId,
       dueDate: new Date(parsed.data.dueDate),
       note: parsed.data.note ?? null,
@@ -75,9 +85,10 @@ router.post("/contacts/:contactId/followups", async (req, res): Promise<void> =>
   const [contact] = await db
     .select({ name: contactsTable.name })
     .from(contactsTable)
-    .where(eq(contactsTable.id, params.data.contactId));
+    .where(and(eq(contactsTable.id, params.data.contactId), eq(contactsTable.userId, req.userId!)));
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     contactId: params.data.contactId,
     action: "followup_set",
     details: `Follow-up reminder set for ${new Date(parsed.data.dueDate).toLocaleDateString()}`,
@@ -107,7 +118,7 @@ router.patch("/followups/:id", async (req, res): Promise<void> => {
   const [followup] = await db
     .update(followUpsTable)
     .set(updateData)
-    .where(eq(followUpsTable.id, params.data.id))
+    .where(and(eq(followUpsTable.id, params.data.id), eq(followUpsTable.userId, req.userId!)))
     .returning();
 
   if (!followup) {
@@ -122,6 +133,7 @@ router.patch("/followups/:id", async (req, res): Promise<void> => {
 
   if (parsed.data.status === "completed") {
     await db.insert(activitiesTable).values({
+      userId: req.userId!,
       contactId: followup.contactId,
       action: "followup_completed",
       details: "Follow-up marked as completed",
@@ -140,7 +152,7 @@ router.delete("/followups/:id", async (req, res): Promise<void> => {
 
   const [followup] = await db
     .delete(followUpsTable)
-    .where(eq(followUpsTable.id, params.data.id))
+    .where(and(eq(followUpsTable.id, params.data.id), eq(followUpsTable.userId, req.userId!)))
     .returning();
 
   if (!followup) {

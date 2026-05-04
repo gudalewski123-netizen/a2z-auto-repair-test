@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, activitiesTable, contactsTable } from "@workspace/db";
 import {
   ListActivitiesParams,
@@ -26,7 +26,7 @@ router.get("/contacts/:contactId/activities", async (req, res): Promise<void> =>
     })
     .from(activitiesTable)
     .leftJoin(contactsTable, eq(activitiesTable.contactId, contactsTable.id))
-    .where(eq(activitiesTable.contactId, params.data.contactId))
+    .where(and(eq(activitiesTable.contactId, params.data.contactId), eq(activitiesTable.userId, req.userId!)))
     .orderBy(activitiesTable.createdAt);
 
   res.json(ListActivitiesResponse.parse(activities));

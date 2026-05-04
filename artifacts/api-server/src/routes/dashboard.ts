@@ -11,34 +11,38 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/dashboard/summary", async (_req, res): Promise<void> => {
+router.get("/dashboard/summary", async (req, res): Promise<void> => {
+  const uid = req.userId!;
+
   const totalLeads = await db
     .select({ count: sql<number>`count(*)::int` })
-    .from(contactsTable);
+    .from(contactsTable)
+    .where(eq(contactsTable.userId, uid));
 
   const bookedJobs = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(contactsTable)
-    .where(eq(contactsTable.status, "booked"));
+    .where(and(eq(contactsTable.userId, uid), eq(contactsTable.status, "booked")));
 
   const completedJobs = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(contactsTable)
-    .where(eq(contactsTable.status, "completed"));
+    .where(and(eq(contactsTable.userId, uid), eq(contactsTable.status, "completed")));
 
   const lostLeads = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(contactsTable)
-    .where(eq(contactsTable.status, "lost"));
+    .where(and(eq(contactsTable.userId, uid), eq(contactsTable.status, "lost")));
 
   const totalRevenue = await db
     .select({ total: sql<string>`COALESCE(SUM(${jobsTable.price}), 0)` })
-    .from(jobsTable);
+    .from(jobsTable)
+    .where(eq(jobsTable.userId, uid));
 
   const overdueFollowUps = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(followUpsTable)
-    .where(and(lt(followUpsTable.dueDate, new Date()), eq(followUpsTable.status, "pending")));
+    .where(and(eq(followUpsTable.userId, uid), lt(followUpsTable.dueDate, new Date()), eq(followUpsTable.status, "pending")));
 
   const total = totalLeads[0].count;
   const completed = completedJobs[0].count;
@@ -57,7 +61,7 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
   );
 });
 
-router.get("/dashboard/pipeline", async (_req, res): Promise<void> => {
+router.get("/dashboard/pipeline", async (req, res): Promise<void> => {
   const pipeline = await db
     .select({
       status: contactsTable.status,
@@ -65,6 +69,7 @@ router.get("/dashboard/pipeline", async (_req, res): Promise<void> => {
       revenue: sql<string>`COALESCE(SUM(${contactsTable.totalRevenue}::numeric), 0)`,
     })
     .from(contactsTable)
+    .where(eq(contactsTable.userId, req.userId!))
     .groupBy(contactsTable.status);
 
   const result = pipeline.map((p) => ({
@@ -95,19 +100,21 @@ router.get("/dashboard/recent-activity", async (req, res): Promise<void> => {
     })
     .from(activitiesTable)
     .leftJoin(contactsTable, eq(activitiesTable.contactId, contactsTable.id))
+    .where(eq(activitiesTable.userId, req.userId!))
     .orderBy(desc(activitiesTable.createdAt))
     .limit(limit);
 
   res.json(GetRecentActivityResponse.parse(activities));
 });
 
-router.get("/dashboard/source-breakdown", async (_req, res): Promise<void> => {
+router.get("/dashboard/source-breakdown", async (req, res): Promise<void> => {
   const sources = await db
     .select({
       source: contactsTable.source,
       count: sql<number>`count(*)::int`,
     })
     .from(contactsTable)
+    .where(eq(contactsTable.userId, req.userId!))
     .groupBy(contactsTable.source);
 
   res.json(GetSourceBreakdownResponse.parse(sources));

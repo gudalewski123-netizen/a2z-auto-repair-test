@@ -7,6 +7,7 @@
  */
 
 export * from "./activity";
+export * from "./authUser";
 export * from "./contact";
 export * from "./contactSource";
 export * from "./contactStatus";
@@ -27,7 +28,10 @@ export * from "./listContactsSource";
 export * from "./listContactsStatus";
 export * from "./listFollowUpsParams";
 export * from "./listFollowUpsStatus";
+export * from "./loginBody";
+export * from "./logout200";
 export * from "./pipelineStage";
+export * from "./registerBody";
 export * from "./sourceCount";
 export * from "./submitLeadBody";
 export * from "./submitLeadBodySource";

@@ -225,6 +225,25 @@ export interface SourceCount {
   count: number;
 }
 
+export interface RegisterBody {
+  email: string;
+  /** @minLength 6 */
+  password: string;
+  businessName: string;
+}
+
+export interface LoginBody {
+  email: string;
+  password: string;
+}
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  businessName: string;
+  createdAt?: string;
+}
+
 export type SubmitLeadBodySource =
   (typeof SubmitLeadBodySource)[keyof typeof SubmitLeadBodySource];
 
@@ -253,6 +272,10 @@ export interface LeadSubmitResponse {
   message: string;
   contactId: number;
 }
+
+export type Logout200 = {
+  success?: boolean;
+};
 
 export type ListContactsParams = {
   status?: ListContactsStatus;

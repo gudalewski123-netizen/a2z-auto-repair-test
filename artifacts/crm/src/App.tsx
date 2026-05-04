@@ -1,42 +1,98 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout";
+import { AuthProvider, useAuth } from "@/lib/auth";
 
-// Pages
 import Dashboard from "@/pages/dashboard";
 import Contacts from "@/pages/contacts";
 import ContactDetail from "@/pages/contact-detail";
 import Pipeline from "@/pages/pipeline";
 import LeadsNew from "@/pages/leads-new";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  return <>{children}</>;
+}
+
+function GuestRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Redirect to="/" />;
+  }
+
+  return <>{children}</>;
+}
 
 function Router() {
   return (
     <Switch>
+      <Route path="/login">
+        <GuestRoute>
+          <Login />
+        </GuestRoute>
+      </Route>
+      <Route path="/register">
+        <GuestRoute>
+          <Register />
+        </GuestRoute>
+      </Route>
       <Route path="/leads/new" component={LeadsNew} />
       <Route path="/">
-        <AppLayout>
-          <Dashboard />
-        </AppLayout>
+        <ProtectedRoute>
+          <AppLayout>
+            <Dashboard />
+          </AppLayout>
+        </ProtectedRoute>
       </Route>
       <Route path="/contacts">
-        <AppLayout>
-          <Contacts />
-        </AppLayout>
+        <ProtectedRoute>
+          <AppLayout>
+            <Contacts />
+          </AppLayout>
+        </ProtectedRoute>
       </Route>
       <Route path="/contacts/:id">
-        <AppLayout>
-          <ContactDetail />
-        </AppLayout>
+        <ProtectedRoute>
+          <AppLayout>
+            <ContactDetail />
+          </AppLayout>
+        </ProtectedRoute>
       </Route>
       <Route path="/pipeline">
-        <AppLayout>
-          <Pipeline />
-        </AppLayout>
+        <ProtectedRoute>
+          <AppLayout>
+            <Pipeline />
+          </AppLayout>
+        </ProtectedRoute>
       </Route>
       <Route>
         <AppLayout>
@@ -51,9 +107,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
+        <AuthProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+        </AuthProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

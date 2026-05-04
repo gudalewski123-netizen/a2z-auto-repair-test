@@ -25,7 +25,7 @@ router.get("/contacts", async (req, res): Promise<void> => {
     return;
   }
 
-  const conditions = [];
+  const conditions = [eq(contactsTable.userId, req.userId!)];
   if (params.data.status) {
     conditions.push(eq(contactsTable.status, params.data.status));
   }
@@ -39,14 +39,14 @@ router.get("/contacts", async (req, res): Promise<void> => {
         ilike(contactsTable.name, search),
         ilike(contactsTable.phone, search),
         ilike(contactsTable.email, search)
-      )
+      )!
     );
   }
   if (params.data.tag) {
     conditions.push(sql`${params.data.tag} = ANY(${contactsTable.tags})`);
   }
 
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const where = and(...conditions);
   const contacts = await db
     .select()
     .from(contactsTable)
@@ -70,6 +70,7 @@ router.post("/contacts", async (req, res): Promise<void> => {
   const [contact] = await db
     .insert(contactsTable)
     .values({
+      userId: req.userId!,
       name: parsed.data.name,
       phone: parsed.data.phone,
       email: parsed.data.email ?? null,
@@ -82,6 +83,7 @@ router.post("/contacts", async (req, res): Promise<void> => {
     .returning();
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     contactId: contact.id,
     action: "created",
     details: "Contact created",
@@ -90,8 +92,10 @@ router.post("/contacts", async (req, res): Promise<void> => {
   res.status(201).json(GetContactResponse.parse({ ...contact, totalRevenue: Number(contact.totalRevenue) }));
 });
 
-router.get("/contacts/export", async (_req, res): Promise<void> => {
-  const contacts = await db.select().from(contactsTable).orderBy(contactsTable.createdAt);
+router.get("/contacts/export", async (req, res): Promise<void> => {
+  const contacts = await db.select().from(contactsTable)
+    .where(eq(contactsTable.userId, req.userId!))
+    .orderBy(contactsTable.createdAt);
   const headers = ["ID", "Name", "Phone", "Email", "Status", "Source", "Service Requested", "Notes", "Tags", "Total Revenue", "Created At"];
   const rows = contacts.map((c) => [
     c.id,
@@ -122,7 +126,7 @@ router.get("/contacts/:id", async (req, res): Promise<void> => {
   const [contact] = await db
     .select()
     .from(contactsTable)
-    .where(eq(contactsTable.id, params.data.id));
+    .where(and(eq(contactsTable.id, params.data.id), eq(contactsTable.userId, req.userId!)));
 
   if (!contact) {
     res.status(404).json({ error: "Contact not found" });
@@ -148,7 +152,7 @@ router.patch("/contacts/:id", async (req, res): Promise<void> => {
   const [contact] = await db
     .update(contactsTable)
     .set(parsed.data)
-    .where(eq(contactsTable.id, params.data.id))
+    .where(and(eq(contactsTable.id, params.data.id), eq(contactsTable.userId, req.userId!)))
     .returning();
 
   if (!contact) {
@@ -157,6 +161,7 @@ router.patch("/contacts/:id", async (req, res): Promise<void> => {
   }
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     contactId: contact.id,
     action: "updated",
     details: "Contact info updated",
@@ -174,7 +179,7 @@ router.delete("/contacts/:id", async (req, res): Promise<void> => {
 
   const [contact] = await db
     .delete(contactsTable)
-    .where(eq(contactsTable.id, params.data.id))
+    .where(and(eq(contactsTable.id, params.data.id), eq(contactsTable.userId, req.userId!)))
     .returning();
 
   if (!contact) {
@@ -201,7 +206,7 @@ router.patch("/contacts/:id/status", async (req, res): Promise<void> => {
   const [existing] = await db
     .select({ status: contactsTable.status })
     .from(contactsTable)
-    .where(eq(contactsTable.id, params.data.id));
+    .where(and(eq(contactsTable.id, params.data.id), eq(contactsTable.userId, req.userId!)));
 
   if (!existing) {
     res.status(404).json({ error: "Contact not found" });
@@ -211,10 +216,11 @@ router.patch("/contacts/:id/status", async (req, res): Promise<void> => {
   const [contact] = await db
     .update(contactsTable)
     .set({ status: parsed.data.status })
-    .where(eq(contactsTable.id, params.data.id))
+    .where(and(eq(contactsTable.id, params.data.id), eq(contactsTable.userId, req.userId!)))
     .returning();
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     contactId: contact.id,
     action: "status_changed",
     details: `Status changed from ${existing.status} to ${parsed.data.status}`,

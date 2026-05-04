@@ -1,9 +1,11 @@
-import { pgTable, serial, text, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, numeric, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const contactsTable = pgTable("contacts", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   email: text("email"),

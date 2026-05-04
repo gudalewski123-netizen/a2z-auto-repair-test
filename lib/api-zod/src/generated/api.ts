@@ -8,6 +8,49 @@
 import * as zod from "zod";
 
 /**
+ * @summary Register a new user
+ */
+export const registerBodyPasswordMin = 6;
+
+export const RegisterBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string().min(registerBodyPasswordMin),
+  businessName: zod.string(),
+});
+
+/**
+ * @summary Log in
+ */
+export const LoginBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string(),
+});
+
+export const LoginResponse = zod.object({
+  id: zod.number(),
+  email: zod.string(),
+  businessName: zod.string(),
+  createdAt: zod.coerce.date().optional(),
+});
+
+/**
+ * @summary Log out
+ */
+export const LogoutResponse = zod.object({
+  success: zod.boolean().optional(),
+});
+
+/**
+ * @summary Get current user
+ */
+export const GetMeResponse = zod.object({
+  id: zod.number(),
+  email: zod.string(),
+  businessName: zod.string(),
+  createdAt: zod.coerce.date().optional(),
+});
+
+/**
  * Returns server health status
  * @summary Health check
  */

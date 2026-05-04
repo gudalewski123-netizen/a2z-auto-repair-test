@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, or } from "drizzle-orm";
+import { eq, or, and, sql } from "drizzle-orm";
 import { db, contactsTable, activitiesTable } from "@workspace/db";
 import { SubmitLeadBody } from "@workspace/api-zod";
 
@@ -21,10 +21,11 @@ router.post("/leads", async (req, res): Promise<void> => {
   const [existing] = await db
     .select()
     .from(contactsTable)
-    .where(or(...conditions))
+    .where(and(or(...conditions), sql`${contactsTable.userId} IS NULL`))
     .limit(1);
 
   let contactId: number;
+  const userId = existing?.userId ?? null;
 
   if (existing) {
     const updateData: Record<string, unknown> = {};
@@ -41,6 +42,7 @@ router.post("/leads", async (req, res): Promise<void> => {
     contactId = existing.id;
 
     await db.insert(activitiesTable).values({
+      userId,
       contactId,
       action: "lead_resubmitted",
       details: `Lead form resubmitted. Service: ${parsed.data.serviceRequested ?? "not specified"}`,
@@ -49,6 +51,7 @@ router.post("/leads", async (req, res): Promise<void> => {
     const [contact] = await db
       .insert(contactsTable)
       .values({
+        userId: null,
         name: parsed.data.name,
         phone: parsed.data.phone,
         email: parsed.data.email ?? null,
@@ -63,6 +66,7 @@ router.post("/leads", async (req, res): Promise<void> => {
     contactId = contact.id;
 
     await db.insert(activitiesTable).values({
+      userId: null,
       contactId,
       action: "lead_submitted",
       details: `New lead from ${parsed.data.source ?? "website"}. Service: ${parsed.data.serviceRequested ?? "not specified"}`,
