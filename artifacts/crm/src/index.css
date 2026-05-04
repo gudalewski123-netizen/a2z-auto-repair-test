@@ -84,17 +84,17 @@
   --sidebar: 220 20% 97% / 0.7;
   --sidebar-foreground: 220 15% 15%;
   --sidebar-border: 220 15% 88%;
-  --sidebar-primary: 24 100% 50%;
+  --sidebar-primary: 217 91% 50%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 15% 94%;
   --sidebar-accent-foreground: 220 15% 15%;
-  --sidebar-ring: 24 100% 50%;
+  --sidebar-ring: 217 91% 50%;
 
   --popover: 0 0% 100% / 0.85;
   --popover-foreground: 220 15% 15%;
   --popover-border: 220 15% 88%;
 
-  --primary: 24 100% 50%;
+  --primary: 217 91% 50%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 220 15% 94%;
@@ -110,9 +110,9 @@
   --destructive-foreground: 0 0% 100%;
 
   --input: 220 15% 88%;
-  --ring: 24 100% 50%;
+  --ring: 217 91% 50%;
 
-  --chart-1: 24 100% 50%;
+  --chart-1: 217 91% 50%;
   --chart-2: 220 70% 50%;
   --chart-3: 160 80% 40%;
   --chart-4: 45 100% 50%;
@@ -166,15 +166,15 @@
   --sidebar: 220 15% 10% / 0.7;
   --sidebar-foreground: 220 10% 93%;
   --sidebar-border: 220 10% 18%;
-  --sidebar-primary: 24 100% 50%;
+  --sidebar-primary: 217 91% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 10% 16%;
   --sidebar-accent-foreground: 220 10% 93%;
-  --sidebar-ring: 24 100% 50%;
+  --sidebar-ring: 217 91% 55%;
   --popover: 220 15% 12% / 0.85;
   --popover-foreground: 220 10% 93%;
   --popover-border: 220 10% 18%;
-  --primary: 24 100% 50%;
+  --primary: 217 91% 55%;
   --primary-foreground: 0 0% 100%;
   --secondary: 220 10% 16%;
   --secondary-foreground: 220 10% 93%;
@@ -185,8 +185,8 @@
   --destructive: 0 63% 50%;
   --destructive-foreground: 0 0% 100%;
   --input: 220 10% 22%;
-  --ring: 24 100% 50%;
-  --chart-1: 24 100% 50%;
+  --ring: 217 91% 55%;
+  --chart-1: 217 91% 55%;
   --chart-2: 200 70% 50%;
   --chart-3: 160 80% 40%;
   --chart-4: 45 100% 50%;
@@ -298,7 +298,7 @@
 .glass-input:focus {
   background: rgba(255, 255, 255, 0.7) !important;
   border-color: hsl(var(--primary)) !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 .dark .glass-input:focus {
@@ -335,7 +335,7 @@
   width: 200%;
   height: 200%;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(249, 115, 22, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 20%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.04) 0%, transparent 60%);
   pointer-events: none;
@@ -345,7 +345,7 @@
 .dark .crm-bg::before,
 .dark.crm-bg::before {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 60%);
 }
