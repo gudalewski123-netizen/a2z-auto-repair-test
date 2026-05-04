@@ -309,7 +309,7 @@ export default function ContactDetail() {
                         <FormField control={jobForm.control} name="serviceType" render={({ field }) => (
                           <FormItem>
                             <FormLabel>Service Type</FormLabel>
-                            <FormControl><Input placeholder="e.g. Full Interior Detail" {...field} /></FormControl>
+                            <FormControl><Input placeholder="e.g. Driveway Repair" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />

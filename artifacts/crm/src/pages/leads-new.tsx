@@ -69,7 +69,7 @@ export default function LeadsNew() {
             </div>
             <h2 className="text-2xl font-bold">Request Received</h2>
             <p className="text-muted-foreground">
-              Thank you for reaching out. We will get back to you shortly to confirm your detailing appointment.
+              Thank you for reaching out. We will get back to you shortly to discuss your project.
             </p>
           </CardContent>
           <CardFooter className="justify-center mt-6">
@@ -92,8 +92,8 @@ export default function LeadsNew() {
       </div>
       <div className="relative z-10 glass-strong rounded-2xl w-full max-w-xl overflow-hidden">
         <div className="bg-primary p-6 text-primary-foreground text-center">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Premium Auto Detailing</h1>
-          <p className="mt-2 text-primary-foreground/80 text-sm">Request a quote or book a service today.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Request a Quote</h1>
+          <p className="mt-2 text-primary-foreground/80 text-sm">Fill out the form below and we'll get back to you shortly.</p>
         </div>
         <CardContent className="p-6 sm:p-8">
           <Form {...form}>
@@ -155,11 +155,11 @@ export default function LeadsNew() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Interior Detail">Interior Detail</SelectItem>
-                        <SelectItem value="Exterior Detail">Exterior Detail</SelectItem>
-                        <SelectItem value="Full Detail Package">Full Detail Package</SelectItem>
-                        <SelectItem value="Ceramic Coating">Ceramic Coating</SelectItem>
-                        <SelectItem value="Paint Correction">Paint Correction</SelectItem>
+                        <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                        <SelectItem value="New Project">New Project</SelectItem>
+                        <SelectItem value="Repair / Maintenance">Repair / Maintenance</SelectItem>
+                        <SelectItem value="Consultation">Consultation</SelectItem>
+                        <SelectItem value="Emergency Service">Emergency Service</SelectItem>
                         <SelectItem value="Other">Other (Please specify below)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -173,10 +173,10 @@ export default function LeadsNew() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vehicle Details & Notes</FormLabel>
+                    <FormLabel>Project Details & Notes</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Make, model, year, and any specific concerns (e.g. pet hair, stains)..."
+                        placeholder="Describe your project, timeline, and any specific needs..."
                         className="min-h-[100px] resize-none"
                         {...field}
                       />
