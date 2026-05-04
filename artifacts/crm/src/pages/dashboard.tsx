@@ -12,7 +12,7 @@ import { CONTACT_STATUS_LABELS, CONTACT_SOURCE_LABELS } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const COLORS = ['#f97316', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+const COLORS = ['#2563eb', '#3b82f6', '#10b981', '#06b6d4', '#8b5cf6'];
 
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
