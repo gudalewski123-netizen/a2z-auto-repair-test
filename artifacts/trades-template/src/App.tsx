@@ -110,11 +110,12 @@ function LandingPage() {
       )}
 
       {/* Hero Section */}
-      <section id="hero" className="relative min-h-[90vh] flex items-center pt-20">
+      <section id="hero" className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src="/hero-bg.png" alt="Trades professional working" className="w-full h-full object-cover opacity-40" />
+          <img src="/hero-bg.png" alt="Miami concrete project at sunset" className="w-full h-full object-cover opacity-40 animate-ken-burns" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
+          <div className="absolute inset-0 animate-shimmer"></div>
         </div>
         
         <div className="container mx-auto px-6 relative z-10 py-20">
@@ -238,7 +239,7 @@ function LandingPage() {
 
       {/* CTA Banner */}
       <section className="py-20 relative overflow-hidden bg-primary">
-        <div className="absolute inset-0 bg-[url('/services-bg.png')] opacity-10 object-cover bg-center mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/services-bg.png')] opacity-10 object-cover bg-center mix-blend-overlay animate-ken-burns"></div>
         <div className="container mx-auto px-6 relative z-10 text-center">
           <h2 className="text-4xl md:text-6xl font-condensed font-black uppercase tracking-wide text-white mb-6">Ready to Build Something Great?</h2>
           <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto font-medium">Get a free quote today. Whether it's a new driveway, a backyard patio, or a full remodel — we'll handle it from start to finish.</p>
