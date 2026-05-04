@@ -65,7 +65,7 @@ function LandingPage() {
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground selection:bg-primary selection:text-white">
 
       {/* Navigation */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-background/95 backdrop-blur-md border-b border-white/10 py-4 shadow-2xl' : 'bg-transparent py-6'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'glass-nav py-4 shadow-2xl' : 'bg-transparent py-6'}`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('hero')}>
             <div className="w-10 h-10 bg-primary rounded flex items-center justify-center">
@@ -82,7 +82,7 @@ function LandingPage() {
             <button onClick={() => scrollTo('services')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Services</button>
             <button onClick={() => scrollTo('about')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">About</button>
             <button onClick={() => scrollTo('reviews')} className="font-condensed text-lg uppercase tracking-wide hover:text-primary transition-colors">Reviews</button>
-            <a href="tel:+17867886001" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(238,90,68,0.3)]">
+            <a href="tel:+17867886001" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded font-condensed text-xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(37,99,235,0.3)]">
               <PhoneCall className="w-5 h-5" />
               (786) 788-6001
             </a>
@@ -97,7 +97,7 @@ function LandingPage() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-background/98 backdrop-blur-xl pt-24 px-6 flex flex-col gap-6 md:hidden">
+        <div className="fixed inset-0 z-40 glass-mobile-menu pt-24 px-6 flex flex-col gap-6 md:hidden">
           <button onClick={() => scrollTo('services')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">Services</button>
           <button onClick={() => scrollTo('about')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">About</button>
           <button onClick={() => scrollTo('reviews')} className="font-condensed text-3xl uppercase tracking-wide text-left border-b border-white/10 pb-4">Reviews</button>
@@ -131,7 +131,7 @@ function LandingPage() {
               From custom driveways and patios to full home remodels — Royalty Concrete & Remodeling brings expert craftsmanship to every project across Miami and Miami-Dade County. Quality work, honest pricing, on time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="tel:+17867886001" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(238,90,68,0.4)]">
+              <a href="tel:+17867886001" className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded font-condensed text-2xl uppercase tracking-wider font-bold transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(37,99,235,0.4)]">
                 <PhoneCall className="w-6 h-6" />
                 Call (786) 788-6001
               </a>
@@ -178,7 +178,7 @@ function LandingPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map((service, i) => (
-              <div key={i} className="group bg-card border border-white/5 p-8 rounded hover:border-primary/50 transition-all duration-300 hover:-translate-y-2 cursor-pointer flex flex-col h-full relative overflow-hidden">
+              <div key={i} className="group glass-card p-8 rounded-lg transition-all duration-300 hover:-translate-y-2 cursor-pointer flex flex-col h-full relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="w-14 h-14 bg-background border border-white/10 rounded flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-primary">
                   <ShieldCheck className="w-8 h-8" />
@@ -195,7 +195,7 @@ function LandingPage() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-24 bg-card relative border-y border-white/5">
+      <section id="about" className="py-24 glass-section relative border-y border-white/5">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
@@ -241,7 +241,7 @@ function LandingPage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-20 relative overflow-hidden bg-primary">
+      <section className="py-20 relative overflow-hidden glass-cta">
         <div className="absolute inset-0 bg-[url('/services-bg.png')] opacity-10 object-cover bg-center mix-blend-overlay animate-ken-burns"></div>
         <div className="container mx-auto px-6 relative z-10 text-center">
           <h2 className="text-4xl md:text-6xl font-condensed font-black uppercase tracking-wide text-white mb-6">Ready to Build Something Great?</h2>
@@ -266,7 +266,7 @@ function LandingPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {REVIEWS.map((review, i) => (
-              <div key={i} className="bg-card border border-white/5 p-8 rounded hover:border-white/20 transition-all duration-300 hover:-translate-y-2">
+              <div key={i} className="glass-card p-8 rounded-lg transition-all duration-300 hover:-translate-y-2">
                 <div className="flex gap-1 text-yellow-500 mb-6">
                   {[1,2,3,4,5].map(star => <Star key={star} className="w-5 h-5 fill-current" />)}
                 </div>
@@ -282,7 +282,7 @@ function LandingPage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-24 bg-card border-t border-white/5">
+      <section id="contact" className="py-24 glass-section border-t border-white/5">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-primary font-bold tracking-widest uppercase mb-4 text-sm flex items-center justify-center gap-2">
@@ -293,7 +293,7 @@ function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-            <a href="tel:+17867886001" className="group bg-primary hover:bg-primary/90 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2 shadow-[0_0_30px_rgba(238,90,68,0.3)]">
+            <a href="tel:+17867886001" className="group glass-cta p-8 rounded-lg flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
               <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
                 <PhoneCall className="w-8 h-8 text-white" />
               </div>
@@ -302,7 +302,7 @@ function LandingPage() {
               <div className="text-white/60 text-sm font-medium">Tap to call instantly</div>
             </a>
 
-            <a href="sms:+17867886001" className="group bg-background border border-white/10 hover:border-primary/50 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
+            <a href="sms:+17867886001" className="group glass-contact p-8 rounded-lg flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
                 <MessageCircle className="w-8 h-8 text-primary" />
               </div>
@@ -311,7 +311,7 @@ function LandingPage() {
               <div className="text-muted-foreground text-sm font-medium">Tap to open messages</div>
             </a>
 
-            <a href="mailto:info@royaltyconcretemiami.com" className="group bg-background border border-white/10 hover:border-primary/50 p-8 rounded flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
+            <a href="mailto:info@royaltyconcretemiami.com" className="group glass-contact p-8 rounded-lg flex flex-col items-center text-center gap-4 transition-all hover:-translate-y-2">
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
                 <Mail className="w-8 h-8 text-primary" />
               </div>
