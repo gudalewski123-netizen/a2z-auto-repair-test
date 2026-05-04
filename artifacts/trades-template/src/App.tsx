@@ -359,6 +359,7 @@ function LandingPage() {
               <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
               <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
               <span className="hover:text-white cursor-pointer transition-colors">License: Licensed & Insured</span>
+              <a href="/crm/" className="hover:text-white cursor-pointer transition-colors">Admin</a>
             </div>
           </div>
         </div>
