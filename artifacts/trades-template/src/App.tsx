@@ -316,7 +316,7 @@ function LandingPage() {
                 <Mail className="w-8 h-8 text-primary" />
               </div>
               <div className="font-condensed text-sm font-bold uppercase tracking-widest text-muted-foreground">Email Us</div>
-              <div className="font-condensed text-xl font-black text-white tracking-wide leading-tight break-all">info@royaltyconcretemiami.com</div>
+              <div className="font-condensed text-lg md:text-xl font-black text-white tracking-wide leading-tight whitespace-nowrap">info@royaltyconcretemiami.com</div>
               <div className="text-muted-foreground text-sm font-medium">We reply within hours</div>
             </a>
           </div>
