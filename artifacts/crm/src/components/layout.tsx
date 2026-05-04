@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Columns, LogOut, Menu, X, ChevronRight, Sun, Moon, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Users, Columns, LogOut, Menu, X, ChevronRight, Sun, Moon, ExternalLink, Hammer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -37,7 +37,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
           <div className="p-5 flex items-center justify-between">
-            <span className="font-bold text-xl text-primary tracking-tight">TradeStack CRM</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center shrink-0">
+                <Hammer className="text-white w-4 h-4" />
+              </div>
+              <span className="font-semibold text-sm text-foreground tracking-tight">Admin/CRM</span>
+            </div>
             <button
               className="md:hidden p-1 rounded-lg hover:bg-black/5 transition-colors"
               onClick={() => setSidebarOpen(false)}

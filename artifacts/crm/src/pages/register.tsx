@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Sun, Moon } from "lucide-react";
+import { UserPlus, Sun, Moon, Hammer } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
 export default function Register() {
@@ -40,8 +40,13 @@ export default function Register() {
       <div className="relative z-10 w-full max-w-md">
         <div className="glass-strong rounded-2xl p-8 md:p-10">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-primary tracking-tight">TradeStack CRM</h1>
-            <p className="text-muted-foreground mt-2 text-sm">Create your business account</p>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="w-10 h-10 bg-primary rounded flex items-center justify-center">
+                <Hammer className="text-white w-5 h-5" />
+              </div>
+              <span className="text-xl font-semibold text-foreground">Admin/CRM</span>
+            </div>
+            <p className="text-muted-foreground text-sm">Create your business account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
