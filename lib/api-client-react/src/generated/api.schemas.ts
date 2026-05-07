@@ -273,6 +273,65 @@ export interface LeadSubmitResponse {
   contactId: number;
 }
 
+export type SubmitSiteChangeBodyRequestType =
+  (typeof SubmitSiteChangeBodyRequestType)[keyof typeof SubmitSiteChangeBodyRequestType];
+
+export const SubmitSiteChangeBodyRequestType = {
+  structured: "structured",
+  prompt: "prompt",
+} as const;
+
+export interface SubmitSiteChangeBody {
+  requestType: SubmitSiteChangeBodyRequestType;
+  /** @nullable */
+  businessName?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  aboutText?: string | null;
+  /** @nullable */
+  servicesText?: string | null;
+  /** @nullable */
+  photoNotes?: string | null;
+  /** @nullable */
+  pricingNotes?: string | null;
+  /** @nullable */
+  promptText?: string | null;
+}
+
+export type SiteChangeRequestStatus =
+  (typeof SiteChangeRequestStatus)[keyof typeof SiteChangeRequestStatus];
+
+export const SiteChangeRequestStatus = {
+  pending: "pending",
+  in_progress: "in_progress",
+  completed: "completed",
+} as const;
+
+export interface SiteChangeRequest {
+  id: number;
+  userId: number;
+  requestType: string;
+  /** @nullable */
+  businessName?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  aboutText?: string | null;
+  /** @nullable */
+  servicesText?: string | null;
+  /** @nullable */
+  photoNotes?: string | null;
+  /** @nullable */
+  pricingNotes?: string | null;
+  /** @nullable */
+  promptText?: string | null;
+  status: SiteChangeRequestStatus;
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+}
+
 export type Logout200 = {
   success?: boolean;
 };

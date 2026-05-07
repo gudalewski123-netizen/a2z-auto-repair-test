@@ -24,6 +24,8 @@ tags:
     description: Dashboard summaries
   - name: leads
     description: Public lead capture
+  - name: site-changes
+    description: Site customization requests
 paths:
   /auth/register:
     post:
@@ -544,6 +546,38 @@ paths:
               schema:
                 type: string
 
+  /site-changes:
+    post:
+      operationId: submitSiteChange
+      tags: [site-changes]
+      summary: Submit a site customization request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSiteChangeBody"
+      responses:
+        "201":
+          description: Request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteChangeRequest"
+    get:
+      operationId: listSiteChanges
+      tags: [site-changes]
+      summary: List current user's site change requests
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SiteChangeRequest"
+
 components:
   schemas:
     HealthStatus:
@@ -911,3 +945,64 @@ components:
         - success
         - message
         - contactId
+
+    SubmitSiteChangeBody:
+      type: object
+      properties:
+        requestType:
+          type: string
+          enum: [structured, prompt]
+        businessName:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        aboutText:
+          type: ["string", "null"]
+        servicesText:
+          type: ["string", "null"]
+        photoNotes:
+          type: ["string", "null"]
+        pricingNotes:
+          type: ["string", "null"]
+        promptText:
+          type: ["string", "null"]
+      required:
+        - requestType
+
+    SiteChangeRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        requestType:
+          type: string
+        businessName:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        aboutText:
+          type: ["string", "null"]
+        servicesText:
+          type: ["string", "null"]
+        photoNotes:
+          type: ["string", "null"]
+        pricingNotes:
+          type: ["string", "null"]
+        promptText:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - requestType
+        - status
+        - createdAt

@@ -14,6 +14,7 @@ import Pipeline from "@/pages/pipeline";
 import LeadsNew from "@/pages/leads-new";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import SiteSettings from "@/pages/site-settings";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,13 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Pipeline />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/site-settings">
+        <ProtectedRoute>
+          <AppLayout>
+            <SiteSettings />
           </AppLayout>
         </ProtectedRoute>
       </Route>

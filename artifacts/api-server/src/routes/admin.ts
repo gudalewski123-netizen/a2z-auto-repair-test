@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
+import { db, usersTable, siteChangeRequestsTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -121,6 +121,64 @@ router.patch("/admin/users/:id/password", async (req, res): Promise<void> => {
   }
 
   res.json({ success: true, id: updated.id, email: updated.email });
+});
+
+router.get("/admin/site-changes", async (_req, res): Promise<void> => {
+  const requests = await db
+    .select({
+      id: siteChangeRequestsTable.id,
+      userId: siteChangeRequestsTable.userId,
+      requestType: siteChangeRequestsTable.requestType,
+      businessName: siteChangeRequestsTable.businessName,
+      phone: siteChangeRequestsTable.phone,
+      aboutText: siteChangeRequestsTable.aboutText,
+      servicesText: siteChangeRequestsTable.servicesText,
+      photoNotes: siteChangeRequestsTable.photoNotes,
+      pricingNotes: siteChangeRequestsTable.pricingNotes,
+      promptText: siteChangeRequestsTable.promptText,
+      status: siteChangeRequestsTable.status,
+      adminNotes: siteChangeRequestsTable.adminNotes,
+      createdAt: siteChangeRequestsTable.createdAt,
+      userEmail: usersTable.email,
+      businessNameUser: usersTable.businessName,
+    })
+    .from(siteChangeRequestsTable)
+    .leftJoin(usersTable, eq(siteChangeRequestsTable.userId, usersTable.id))
+    .orderBy(desc(siteChangeRequestsTable.createdAt));
+
+  res.json(requests);
+});
+
+router.patch("/admin/site-changes/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const { status, adminNotes } = req.body;
+
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  const validStatuses = ["pending", "in_progress", "completed"];
+  if (status && !validStatuses.includes(status)) {
+    res.status(400).json({ error: "Invalid status" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(siteChangeRequestsTable)
+    .set({
+      ...(status ? { status } : {}),
+      ...(adminNotes !== undefined ? { adminNotes } : {}),
+    })
+    .where(eq(siteChangeRequestsTable.id, id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Request not found" });
+    return;
+  }
+
+  res.json(updated);
 });
 
 export default router;

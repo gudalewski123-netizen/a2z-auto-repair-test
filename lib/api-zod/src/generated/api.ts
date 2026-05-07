@@ -408,3 +408,37 @@ export const SubmitLeadBody = zod.object({
     .enum(["website", "google_ads", "facebook", "referral", "other"])
     .optional(),
 });
+
+/**
+ * @summary Submit a site customization request
+ */
+export const SubmitSiteChangeBody = zod.object({
+  requestType: zod.enum(["structured", "prompt"]),
+  businessName: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  aboutText: zod.string().nullish(),
+  servicesText: zod.string().nullish(),
+  photoNotes: zod.string().nullish(),
+  pricingNotes: zod.string().nullish(),
+  promptText: zod.string().nullish(),
+});
+
+/**
+ * @summary List current user's site change requests
+ */
+export const ListSiteChangesResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  requestType: zod.string(),
+  businessName: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  aboutText: zod.string().nullish(),
+  servicesText: zod.string().nullish(),
+  photoNotes: zod.string().nullish(),
+  pricingNotes: zod.string().nullish(),
+  promptText: zod.string().nullish(),
+  status: zod.enum(["pending", "in_progress", "completed"]),
+  adminNotes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListSiteChangesResponse = zod.array(ListSiteChangesResponseItem);

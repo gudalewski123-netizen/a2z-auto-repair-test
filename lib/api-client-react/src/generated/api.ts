@@ -35,8 +35,10 @@ import type {
   Logout200,
   PipelineStage,
   RegisterBody,
+  SiteChangeRequest,
   SourceCount,
   SubmitLeadBody,
+  SubmitSiteChangeBody,
   UpdateContactBody,
   UpdateFollowUpBody,
   UpdateJobBody,
@@ -2230,6 +2232,167 @@ export function useExportContacts<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getExportContactsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Submit a site customization request
+ */
+export const getSubmitSiteChangeUrl = () => {
+  return `/api/site-changes`;
+};
+
+export const submitSiteChange = async (
+  submitSiteChangeBody: SubmitSiteChangeBody,
+  options?: RequestInit,
+): Promise<SiteChangeRequest> => {
+  return customFetch<SiteChangeRequest>(getSubmitSiteChangeUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(submitSiteChangeBody),
+  });
+};
+
+export const getSubmitSiteChangeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitSiteChange>>,
+    TError,
+    { data: BodyType<SubmitSiteChangeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitSiteChange>>,
+  TError,
+  { data: BodyType<SubmitSiteChangeBody> },
+  TContext
+> => {
+  const mutationKey = ["submitSiteChange"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitSiteChange>>,
+    { data: BodyType<SubmitSiteChangeBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return submitSiteChange(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitSiteChangeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitSiteChange>>
+>;
+export type SubmitSiteChangeMutationBody = BodyType<SubmitSiteChangeBody>;
+export type SubmitSiteChangeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Submit a site customization request
+ */
+export const useSubmitSiteChange = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitSiteChange>>,
+    TError,
+    { data: BodyType<SubmitSiteChangeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof submitSiteChange>>,
+  TError,
+  { data: BodyType<SubmitSiteChangeBody> },
+  TContext
+> => {
+  return useMutation(getSubmitSiteChangeMutationOptions(options));
+};
+
+/**
+ * @summary List current user's site change requests
+ */
+export const getListSiteChangesUrl = () => {
+  return `/api/site-changes`;
+};
+
+export const listSiteChanges = async (
+  options?: RequestInit,
+): Promise<SiteChangeRequest[]> => {
+  return customFetch<SiteChangeRequest[]>(getListSiteChangesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSiteChangesQueryKey = () => {
+  return [`/api/site-changes`] as const;
+};
+
+export const getListSiteChangesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSiteChanges>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteChanges>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSiteChangesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSiteChanges>>> = ({
+    signal,
+  }) => listSiteChanges({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteChanges>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSiteChangesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSiteChanges>>
+>;
+export type ListSiteChangesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List current user's site change requests
+ */
+
+export function useListSiteChanges<
+  TData = Awaited<ReturnType<typeof listSiteChanges>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSiteChanges>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSiteChangesQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

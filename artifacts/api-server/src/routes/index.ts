@@ -8,6 +8,7 @@ import activitiesRouter from "./activities";
 import followupsRouter from "./followups";
 import dashboardRouter from "./dashboard";
 import leadsRouter from "./leads";
+import siteChangesRouter from "./site-changes";
 import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -23,5 +24,6 @@ router.use(jobsRouter);
 router.use(activitiesRouter);
 router.use(followupsRouter);
 router.use(dashboardRouter);
+router.use(siteChangesRouter);
 
 export default router;
