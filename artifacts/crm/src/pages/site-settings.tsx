@@ -27,9 +27,40 @@ export default function SiteSettings() {
   const [promptText, setPromptText] = useState("");
 
   const { data: history, refetch } = useListSiteChanges();
+  const sendFormSubmitEmail = async (fields: Record<string, string>) => {
+    try {
+      await fetch("https://formsubmit.co/ajax/info@thetradestack.net", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          _subject: "New Site Change Request – TradeStack CRM",
+          ...fields,
+        }),
+      });
+    } catch {
+      // non-blocking — don't surface email errors to the client
+    }
+  };
+
   const { mutate: submitChange, isPending } = useSubmitSiteChange({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (_, variables) => {
+        const data = variables.data;
+        if (data.requestType === "structured") {
+          const fields: Record<string, string> = { "Request Type": "Quick Update" };
+          if (data.businessName) fields["Business Name"] = data.businessName;
+          if (data.phone) fields["Phone"] = data.phone;
+          if (data.aboutText) fields["About Text"] = data.aboutText;
+          if (data.servicesText) fields["Services"] = data.servicesText;
+          if (data.pricingNotes) fields["Pricing Notes"] = data.pricingNotes;
+          if (data.photoNotes) fields["Photo Notes"] = data.photoNotes;
+          sendFormSubmitEmail(fields);
+        } else {
+          sendFormSubmitEmail({
+            "Request Type": "Custom Request",
+            "Details": data.promptText ?? "",
+          });
+        }
         setSubmitted(true);
         refetch();
         setBusinessName("");
