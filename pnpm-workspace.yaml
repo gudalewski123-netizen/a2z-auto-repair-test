@@ -67,6 +67,12 @@ catalog:
 
 autoInstallPeers: false
 
+# pnpm 11 fails install if a dep with build scripts isn't approved.
+strictDepBuilds: false
+
+# pnpm 11 re-runs install before any filter script unless this is off.
+verifyDepsBeforeRun: false
+
 onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
