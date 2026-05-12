@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: api-server
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: "corepack enable && NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @workspace/db run push && pnpm --filter @workspace/api-server run build"
+    startCommand: "pnpm --filter @workspace/api-server run start"
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: LEAD_NOTIFY_TO
+        value: teddy.nk28@gmail.com
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_API_KEY
+        generateValue: true
+      # Stripe (uncomment if site sells)
+      # - key: STRIPE_SECRET_KEY
+      #   sync: false
+      # - key: STRIPE_PUBLISHABLE_KEY
+      #   sync: false
+      # - key: STRIPE_WEBHOOK_SECRET
+      #   sync: false
