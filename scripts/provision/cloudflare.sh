@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Add Cloudflare DNS CNAME records pointing at Vercel for the given domain.
-# Apex (@) and www, both proxied=false (gray cloud).
+# Always adds apex (@) and www. Additional subdomains (e.g. crm) are passed as
+# a comma-separated list as the second argument.
+# All records are proxied=false (gray cloud) so Vercel handles SSL directly.
 #
-# Usage:  ./scripts/provision/cloudflare.sh <domain>
-# Example: ./scripts/provision/cloudflare.sh acmeroofing.com
+# Usage:  ./scripts/provision/cloudflare.sh <domain> [extra-subdomains-csv]
+# Examples:
+#   ./scripts/provision/cloudflare.sh acmeroofing.com              # apex + www only
+#   ./scripts/provision/cloudflare.sh acmeroofing.com crm          # + crm.acmeroofing.com
+#   ./scripts/provision/cloudflare.sh acmeroofing.com crm,blog     # + crm + blog subdomains
 #
 # The domain must already be added to Cloudflare under the account this token has access to.
 
@@ -13,7 +18,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
 DOMAIN="${1:-}"
-[[ -n "${DOMAIN}" ]] || die "usage: $0 <domain>"
+EXTRA_SUBDOMAINS_CSV="${2:-}"
+[[ -n "${DOMAIN}" ]] || die "usage: $0 <domain> [extra-subdomains-csv]"
 
 require_env_file
 require_var CLOUDFLARE_API_TOKEN
@@ -63,8 +69,19 @@ upsert_cname() {
   fi
 }
 
+# Always do apex + www
 upsert_cname "${DOMAIN}"      "${VERCEL_CNAME_TARGET}"
 upsert_cname "www.${DOMAIN}"  "${VERCEL_CNAME_TARGET}"
 
-info "Done. ${DOMAIN} and www.${DOMAIN} now CNAME to ${VERCEL_CNAME_TARGET} (gray cloud)."
+# Then any extra subdomains the caller asked for (e.g. "crm" or "crm,blog")
+if [[ -n "${EXTRA_SUBDOMAINS_CSV}" ]]; then
+  IFS=',' read -ra EXTRA_SUBDOMAINS <<< "${EXTRA_SUBDOMAINS_CSV}"
+  for sub in "${EXTRA_SUBDOMAINS[@]}"; do
+    sub="$(echo -n "${sub}" | tr -d ' \t')"
+    [[ -z "${sub}" ]] && continue
+    upsert_cname "${sub}.${DOMAIN}" "${VERCEL_CNAME_TARGET}"
+  done
+fi
+
+info "Done."
 echo "https://${DOMAIN}"

@@ -40,10 +40,17 @@ TIER-2 always deploys all four pieces: **Neon DB, Render API, Vercel trades-temp
 
 ### 3b. CRM (crm app) — Vercel project B
 
-1. In Vercel: **Add New → Project** → import the **same repo** again.
+Either via script:
+```bash
+./scripts/provision/vercel.sh acme-roofing-crm crm.acmeroofing.com artifacts/crm
+```
+
+Or via Vercel UI:
+1. **Add New → Project** → import the **same repo** again.
 2. **Root Directory**: set to `artifacts/crm`. (This is crucial — Vercel will read `artifacts/crm/vercel.json`.)
 3. Click **Deploy**.
-4. Copy the CRM's `*.vercel.app` URL (e.g. `acme-roofing-crm.vercel.app`).
+
+Either way, copy the CRM's `*.vercel.app` URL (e.g. `acme-roofing-crm.vercel.app`) for step 3c.
 
 ### 3c. Wire the CRM URL into the marketing site
 
@@ -54,14 +61,19 @@ TIER-2 always deploys all four pieces: **Neon DB, Render API, Vercel trades-temp
 
 The simplest pattern: marketing site at the apex, CRM at `crm.yourdomain.com` subdomain.
 
-1. In Cloudflare, open the DNS settings for the client's domain.
-2. Add CNAME records:
-   - **apex** (`@` or root) → `vercel-dns-017.com` — proxy **DISABLED** (gray cloud) — points to marketing site
-   - **www** → `vercel-dns-017.com` — proxy **DISABLED** (gray cloud)
-   - **crm** → `vercel-dns-017.com` — proxy **DISABLED** (gray cloud) — points to CRM
-3. In Vercel project A (marketing) settings → **Domains**, add the apex + `www` domains.
-4. In Vercel project B (CRM) settings → **Domains**, add `crm.yourdomain.com`.
-5. Update Render's `ALLOWED_ORIGINS` env var to include ALL frontend origins:
+Either via script (one command does apex + www + crm subdomain):
+```bash
+./scripts/provision/cloudflare.sh acmeroofing.com crm
+```
+
+Or via Cloudflare UI:
+1. Add CNAME records (all proxied=false, gray cloud, target `vercel-dns-017.com`):
+   - **apex** (`@` or root) — points to marketing site
+   - **www**
+   - **crm** — points to CRM
+2. In Vercel project A (marketing) settings → **Domains**, add the apex + `www` domains. (Automatic if you used `vercel.sh acme-roofing acmeroofing.com`.)
+3. In Vercel project B (CRM) settings → **Domains**, add `crm.acmeroofing.com`. (Automatic if you used `vercel.sh acme-roofing-crm crm.acmeroofing.com artifacts/crm`.)
+4. Update Render's `ALLOWED_ORIGINS` env var to include ALL frontend origins:
    ```
    https://yourdomain.com,https://www.yourdomain.com,https://crm.yourdomain.com,https://<vercel-a>.vercel.app,https://<vercel-b>.vercel.app
    ```

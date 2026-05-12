@@ -8,10 +8,10 @@ These run on **your local machine**, not on GitHub. Tokens are read from `~/.tie
 
 | Script | What it does | Returns on stdout |
 |---|---|---|
-| `neon.sh <project-name>` | Creates a Neon Postgres project under Teddy's org | `DATABASE_URL` (with sslmode params) |
+| `neon.sh <project-name>` | Creates a Neon Postgres project under Teddy's org | `DATABASE_URL` (with sslmode + channel_binding) |
 | `render.sh <service> <database-url> <origins>` | Creates a Render web service from this repo's `render.yaml` | `https://<service>.onrender.com` |
-| `vercel.sh <project> [domain]` | Creates a Vercel project linked to this repo's GitHub origin | Production URL |
-| `cloudflare.sh <domain>` | Adds apex + www CNAME records pointing at `vercel-dns-017.com` | `https://<domain>` |
+| `vercel.sh <project> [domain] [root-directory]` | Creates a Vercel project linked to this repo's GitHub origin. Pass `artifacts/crm` as `root-directory` for the CRM project. | Production URL |
+| `cloudflare.sh <domain> [extra-subdomains-csv]` | Adds apex + www CNAME records (gray cloud). Optional extra subdomains as comma-separated list (e.g. `crm` or `crm,blog`). | `https://<domain>` |
 
 All scripts:
 - Echo progress to **stderr** (so callers can capture clean stdout)

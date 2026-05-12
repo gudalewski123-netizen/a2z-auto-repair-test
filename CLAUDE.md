@@ -105,38 +105,32 @@ DOMAIN=acmeroofing.com
 # 1. Neon DB
 DATABASE_URL=$(./scripts/provision/neon.sh "${SLUG}-prod")
 
-# 2. Render API
-RENDER_URL=$(./scripts/provision/render.sh "${SLUG}-api" "$DATABASE_URL" "https://${DOMAIN},https://www.${DOMAIN},https://crm.${DOMAIN}")
+# 2. Render API — pass all four expected origins (both Vercel-default URLs +
+#    both custom domains) for CORS
+RENDER_URL=$(./scripts/provision/render.sh "${SLUG}-api" "$DATABASE_URL" \
+  "https://${DOMAIN},https://www.${DOMAIN},https://crm.${DOMAIN},https://${SLUG}.vercel.app,https://${SLUG}-crm.vercel.app")
 RENDER_HOST="${RENDER_URL#https://}"
 
 # 3. Update both vercel.json files with the real Render URL
 sed -i.bak "s|YOUR-RENDER-SERVICE.onrender.com|${RENDER_HOST}|g" vercel.json artifacts/crm/vercel.json
 rm vercel.json.bak artifacts/crm/vercel.json.bak
 
-# 4. Commit + push so the next Vercel deploys use the right Render URL
+# 4. Commit + push so Vercel reads the right Render URL on first build
 git add -A && git commit -m "Provision: wire Render URL into vercel.json" && git push origin main
 
-# 5. Vercel project A — marketing site (root dir = .)
+# 5. Vercel project A — marketing site (root directory = repo root)
 MARKETING_URL=$(./scripts/provision/vercel.sh "${SLUG}" "${DOMAIN}")
 
-# 6. Vercel project B — CRM (root dir = artifacts/crm)
-# NOTE: vercel.sh currently doesn't accept a --root-directory arg. For TIER-2,
-# create the CRM Vercel project in the UI:
-#   - Add New → Project → import same repo
-#   - Root Directory: artifacts/crm
-#   - Deploy
-# Then copy its .vercel.app URL.
-CRM_URL="https://${SLUG}-crm.vercel.app"   # paste actual URL after manual creation
+# 6. Vercel project B — CRM (root directory = artifacts/crm)
+CRM_URL=$(./scripts/provision/vercel.sh "${SLUG}-crm" "crm.${DOMAIN}" "artifacts/crm")
 
-# 7. Update root vercel.json with the CRM URL so /crm/* routing works
+# 7. Update root vercel.json with the CRM URL so /crm/* proxy routing works
 sed -i.bak "s|YOUR-CRM-PROJECT.vercel.app|${CRM_URL#https://}|g" vercel.json
 rm vercel.json.bak
 git add vercel.json && git commit -m "Provision: wire CRM URL into root vercel.json" && git push origin main
 
-# 8. Cloudflare DNS — apex + www for marketing, crm subdomain for CRM
-./scripts/provision/cloudflare.sh "${DOMAIN}"
-# (cloudflare.sh currently does apex + www. For the crm subdomain, add manually
-# in CF dashboard OR extend the script — see TEDDY-SETUP.md.)
+# 8. Cloudflare DNS — apex + www for marketing, crm subdomain for CRM (one call)
+./scripts/provision/cloudflare.sh "${DOMAIN}" "crm"
 ```
 
 ## 6. Verify
@@ -170,7 +164,7 @@ TODOs for the client:
 
 - **Render free tier blocks SMTP** (ports 25/465/587). Always FormSubmit, always from the frontend. Backend `fetch` to FormSubmit fails because Node strips Origin/Referer.
 - **FormSubmit "needs activation" returns HTTP 200**. Parse the JSON body for `success: "true"`, not just status code. Activation links expire ~24 hours.
-- **Two Vercel projects, one repo** — both linked to the same repo, different Root Directories (`.` and `artifacts/crm`). The CRM project must be created manually in the UI for now.
+- **Two Vercel projects, one repo** — both linked to the same repo, different Root Directories. `vercel.sh` handles both: the 3rd positional arg is `[root-directory]` (default `.`, set to `artifacts/crm` for the CRM project).
 - **Both vercel.json files have `YOUR-RENDER-SERVICE` and (root only) `YOUR-CRM-PROJECT` placeholders** — fill in via `sed` after the platforms exist. Don't forget either.
 - **CORS** — `ALLOWED_ORIGINS` on Render must include every frontend origin (both Vercel URLs and both custom domains). Missing one will cause CRM login to fail with a CORS error.
 - **Render auto-suffixes service names** if there's a collision. Always grab the actual `.onrender.com` URL from the API response.
