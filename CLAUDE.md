@@ -60,3 +60,24 @@ If they only need a marketing site + simple admin, use **TIER1REMIXONLYTemplate*
 
 ## Status
 ✅ Patched and Neon-ready. Not deployed.
+
+---
+
+## ⚠️ Known sandbox gotchas (from May 13 test-run findings)
+
+If you're running this through Cowork (Claude desktop), the sandbox is isolated:
+
+1. **`~/Claude/cowork-handoff/` is NOT auto-mounted.** Paste API tokens inline in your first message of every new task — don't rely on the sandbox reading credential files from there.
+
+2. **Sandbox can't auth to GitHub for private clones.** Mount the parent `~/Projects/` folder when starting the task; the agent will copy from `~/Projects/templates/TIER1REMIXONLYTemplate/` locally instead of cloning from GitHub.
+
+3. **Some mounts are read-only / block deletes.** If the agent leaves a `README_TODO.md` flagging files to remove, do that manually via Finder or Terminal:
+   ```bash
+   rm <client-folder>/artifacts/trades-template/public/<placeholder-files>
+   ```
+
+4. **After copying scripts from a local template clone**, run:
+   ```bash
+   chmod +x scripts/*.sh
+   ```
+   Without this, `./scripts/bootstrap-client.sh` will fail with "permission denied".
