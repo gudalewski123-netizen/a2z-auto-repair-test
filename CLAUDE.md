@@ -176,3 +176,9 @@ Same architecture as Tier 1's leads dashboard:
 - QuoteForm dual-writes to `/api/leads` and FormSubmit in parallel
 
 Tier 2 ALSO has the full CRM (contacts, jobs, activities, followups) — those live in `artifacts/crm/` and have their own admin flows. The leads dashboard described here is the entry point; once a lead becomes a customer you'd promote them into the CRM (manual today; could be a `POST /api/admin/leads/:id/promote-to-contact` endpoint later).
+
+## Design Workflow
+Before writing any frontend code, read `FRONTEND.md` — it has the anti-generic guardrails, screenshot workflow, and business-info propagation rules.
+
+## Business Info Propagation
+Source of truth: `business.config.json` (root). Run `node scripts/sync-business-info.mjs` to push it into `src/config.ts` and print the env vars for Render.

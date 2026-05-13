@@ -1,0 +1,11 @@
+{
+  "businessName": "[Business Name]",
+  "tagline": "[One-line tagline]",
+  "email": "[client@example.com]",
+  "phone": "[(555) 555-5555]",
+  "address": "[123 Main St, City, ST 12345]",
+  "tradeType": "general",
+  "domain": "",
+  "primaryColor": "#000000",
+  "leadNotifyTo": "teddy.nk28@gmail.com"
+}
