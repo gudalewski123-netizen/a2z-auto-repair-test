@@ -81,3 +81,16 @@ If you're running this through Cowork (Claude desktop), the sandbox is isolated:
    chmod +x scripts/*.sh
    ```
    Without this, `./scripts/bootstrap-client.sh` will fail with "permission denied".
+
+---
+
+## Sanity checks for any agent working on this template
+
+(Same as Tier 1.)
+
+1. **You're on the TEMPLATE**, not a previous client. Don't mirror cleanslate-softwash or thetradestack — those are live sites with client-specific assets.
+2. **`artifacts/trades-template/src/config.ts`** is the source of truth for branding. The CRM app at `artifacts/crm/` has its own theming.
+3. **`PITCH_MODE`** in trades-template/src/config.ts lets you ship a design preview without backend provisioning.
+4. **`CHECKLIST.md`** at repo root is the per-fork launch checklist.
+5. **Photos in `public/`** are generic names — keep them that way.
+6. **Google Business Profile phone numbers can be call-tracking lines.** Verify against the client's real website.
