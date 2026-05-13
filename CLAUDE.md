@@ -157,3 +157,9 @@ Returns `{"success":"true"}` → activated. Returns `{"success":"false","message
 ### Spam-folder reality check
 
 FormSubmit emails frequently land in **Spam** or **Promotions**, especially the first activation email. Tell every new client to check those folders explicitly. They almost always have to fish the email out.
+
+---
+
+## Build-time safety nets
+
+Same as Tier 1: `scripts/check-config.sh` (prebuild validator) + `scripts/smoke-test.sh` (post-deploy verification). See Tier 1's CLAUDE.md for details.

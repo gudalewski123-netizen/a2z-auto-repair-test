@@ -5,6 +5,7 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 
 ## Branding / Content
 - [ ] `BUSINESS.name`, `shortName`, `trade`, `location`, `serviceArea` updated in `config.ts`
+- [ ] `BUSINESS.tradeType` set (controls placeholder photos — see placeholders.ts for valid keys)
 - [ ] `BUSINESS.phone` is the REAL phone (not the Google Local Services Ads call-tracking number — verify against client's actual website / Yelp / business card)
 - [ ] `BUSINESS.phoneRaw` matches in E.164 format (`+1XXXXXXXXXX`)
 - [ ] `BUSINESS.email` set
@@ -55,6 +56,10 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] Webhook endpoint created at `<render-url>/api/stripe/webhook`
 - [ ] `STRIPE_WEBHOOK_SECRET` set on Render
 - [ ] Test checkout → row appears in `orders` table
+
+## Smoke test (after every deploy)
+- [ ] `./scripts/smoke-test.sh https://<render-url> https://<vercel-url>` returns all ✓
+- [ ] If any check fails, see error explanations at the bottom of smoke-test.sh
 
 ## Final hand-off
 - [ ] Admin password handed to client
