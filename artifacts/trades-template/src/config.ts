@@ -4,18 +4,18 @@
 // ============================================================
 
 export const BUSINESS = {
-  name: "Macias Multy Services LLC",
-  shortName: "Macias Multy Services",
-  trade: "Fence Contractor",
-  location: "Miami, FL",
-  serviceArea: "Miami & South Florida",
+  name: "[Client Business Name]",
+  shortName: "[Client Name]",
+  trade: "[Trade Type]",
+  location: "[City, State]",
+  serviceArea: "[Primary Service Area]",
 
-  phone: "(786) 929-8933",
-  phoneRaw: "+17869298933",
+  phone: "(555) 555-5555",
+  phoneRaw: "+15555555555",
 
   email: "",
 
-  hours: "Open 24 Hours — 7 Days a Week",
+  hours: "[Business Hours]",
 
   yearsInBusiness: "",
 
@@ -28,26 +28,23 @@ export const BUSINESS = {
 };
 
 export const HERO = {
-  headline1: "Fences Built",
-  headline2: "To Stand Strong",
-  subheading:
-    "Expert fence installation and repair across Miami and South Florida. From wood and vinyl to chain link and gates — Macias Multy Services delivers quality fencing on time and on budget.",
-  cta1: "Call (786) 929-8933",
+  headline1: "[Headline Part 1]",
+  headline2: "[Headline Part 2]",
+  subheading: "[Subheading describing what the business does and where.]",
+  cta1: "Call [phone]",
   cta2: "Get a Free Quote",
 };
 
 export const ABOUT = {
-  headline: "We Build Fences That Last.",
-  body1:
-    "Macias Multy Services LLC is a trusted fence contractor serving Miami and South Florida. We specialize in residential and commercial fence installation, repair, and gate work — handling every job with precision and care.",
-  body2:
-    "Whether you need a new privacy fence, a quick repair after storm damage, or a custom gate for your driveway — our team shows up on time, works clean, and delivers results you'll be proud of.",
-  teamPhotoAlt: "Macias Multy Services fence installation project in Miami",
+  headline: "[About headline]",
+  body1: "[First paragraph about the business.]",
+  body2: "[Second paragraph.]",
+  teamPhotoAlt: "[Alt text]",
 };
 
 export const CTA_BANNER = {
-  headline: "Need a Fence? We've Got You.",
-  body: "Get a free quote today. Installation, repair, or gates — we handle it all across Miami and South Florida. Available 24 hours a day.",
+  headline: "[CTA headline]",
+  body: "[CTA body copy.]",
 };
 
 export const BADGES = [
