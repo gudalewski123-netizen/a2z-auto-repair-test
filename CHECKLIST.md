@@ -57,6 +57,13 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] `STRIPE_WEBHOOK_SECRET` set on Render
 - [ ] Test checkout → row appears in `orders` table
 
+## Leads dashboard
+- [ ] Visit `/admin` on the deployed site
+- [ ] Log in with `ADMIN_PASSWORD` (Render env var)
+- [ ] Submit a test quote on the public site → verify it appears in /admin within 5s
+- [ ] Update its status to "contacted" → reload → status persists
+- [ ] Click an email link → opens mail client; click a phone link → starts a call
+
 ## Smoke test (after every deploy)
 - [ ] `./scripts/smoke-test.sh https://<render-url> https://<vercel-url>` returns all ✓
 - [ ] If any check fails, see error explanations at the bottom of smoke-test.sh

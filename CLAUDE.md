@@ -163,3 +163,16 @@ FormSubmit emails frequently land in **Spam** or **Promotions**, especially the 
 ## Build-time safety nets
 
 Same as Tier 1: `scripts/check-config.sh` (prebuild validator) + `scripts/smoke-test.sh` (post-deploy verification). See Tier 1's CLAUDE.md for details.
+
+---
+
+## Tier 2 — Leads dashboard
+
+Same architecture as Tier 1's leads dashboard:
+- Schema: `leadsTable` in `lib/db/src/schema/leads.ts`
+- Routes: `POST /api/leads`, `GET/PATCH/DELETE /api/admin/leads`, `POST /api/admin/login`
+- Auth: `ADMIN_PASSWORD` env var, sent as Bearer token
+- UI: `/admin` page with Leads tab (default) + Brand tab
+- QuoteForm dual-writes to `/api/leads` and FormSubmit in parallel
+
+Tier 2 ALSO has the full CRM (contacts, jobs, activities, followups) — those live in `artifacts/crm/` and have their own admin flows. The leads dashboard described here is the entry point; once a lead becomes a customer you'd promote them into the CRM (manual today; could be a `POST /api/admin/leads/:id/promote-to-contact` endpoint later).

@@ -71,6 +71,28 @@ function QuoteForm() {
     fd.append("_captcha", "false"); // optional; FormSubmit serves a CAPTCHA page by default
     fd.append("Source", BUSINESS.name);
 
+    // Save to backend DB FIRST so the lead is captured even if FormSubmit
+    // is down, rate-limited, or hasn't been activated for this recipient yet.
+    // This is the source of truth for the admin dashboard.
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(fd.get("name") || ""),
+          phone: String(fd.get("phone") || ""),
+          email: String(fd.get("email") || ""),
+          service: String(fd.get("service") || ""),
+          message: String(fd.get("message") || ""),
+        }),
+      });
+    } catch (err) {
+      // Backend save failed (no backend deployed yet, network error, etc.).
+      // Don't block the FormSubmit path — at worst we lose the admin-dashboard
+      // entry and rely on the FormSubmit email.
+      console.warn("Backend save failed, continuing with FormSubmit", err);
+    }
+
     try {
       const res = await fetch(`https://formsubmit.co/${encodeURIComponent(recipient)}`, {
         method: "POST",
