@@ -94,3 +94,9 @@ If you're running this through Cowork (Claude desktop), the sandbox is isolated:
 4. **`CHECKLIST.md`** at repo root is the per-fork launch checklist.
 5. **Photos in `public/`** are generic names — keep them that way.
 6. **Google Business Profile phone numbers can be call-tracking lines.** Verify against the client's real website.
+
+---
+
+## Placeholder photos
+
+Same system as Tier 1: set `BUSINESS.tradeType` in `artifacts/trades-template/src/config.ts`, and `placeholders.ts` returns trade-appropriate Unsplash photos. 12 trades supported, Picsum fallback for anything else. See Tier 1's docs for the full list and how to extend.
