@@ -4,151 +4,131 @@
 // ============================================================
 
 export const BUSINESS = {
-  name: "Royalty Concrete & Remodeling Services LLC",
-  shortName: "Royalty Concrete & Remodeling",
-  subTagline: "Concrete & Remodeling", // small line under the logo
-  trade: "Concrete & Remodeling Contractor",
+  name: "Macias Multy Services LLC",
+  shortName: "Macias Multy Services",
+  trade: "Fence Contractor",
   location: "Miami, FL",
-  serviceArea: "Miami & All of Miami-Dade County, FL",
-  serviceAreaShort: "Miami and Miami-Dade County", // used inside body copy
+  serviceArea: "Miami & South Florida",
 
-  phone: "(786) 788-6001",
-  phoneRaw: "+17867886001",
+  phone: "(786) 929-8933",
+  phoneRaw: "+17869298933",
 
-  email: "info@royaltyconcretemiami.com",
+  email: "",
 
-  hours: "Sat 8:00 AM – 12:00 AM • Call for Daily Hours",
+  hours: "Open 24 Hours — 7 Days a Week",
 
-  yearsInBusiness: "", // empty hides the floating "X+ Years Experience" badge
+  yearsInBusiness: "",
+
+  // Trade type — must match a key in placeholders.ts (or "default").
+  // Lowercase, hyphen-separated. Examples: "softwash", "roofing", "lawn-care",
+  // "fencing", "auto-detailing", "junk-removal", "hvac", "plumbing",
+  // "electrical", "painting", "tree-services", "cleaning".
+  // Used to pick trade-appropriate placeholder photos until the client sends real ones.
+  tradeType: "default",
 };
 
 export const HERO = {
-  headline1: "Built To",
-  headline2: "Last A Lifetime",
+  headline1: "Fences Built",
+  headline2: "To Stand Strong",
   subheading:
-    "From custom driveways and patios to full home remodels — Royalty Concrete & Remodeling brings expert craftsmanship to every project across Miami and Miami-Dade County. Quality work, honest pricing, on time.",
-  cta1: "Call (786) 788-6001",
-  cta2: "Book Service",
+    "Expert fence installation and repair across Miami and South Florida. From wood and vinyl to chain link and gates — Macias Multy Services delivers quality fencing on time and on budget.",
+  cta1: "Call (786) 929-8933",
+  cta2: "Get a Free Quote",
 };
-
-// 3 trust badges shown below the hero CTAs. Icon keys must be one of:
-//   "ShieldCheck" | "MessageSquare" | "Zap" | "Hammer" | "Star" | "PhoneCall"
-export const HERO_BADGES = [
-  { label: "Licensed & Insured", icon: "ShieldCheck" },
-  { label: "Free Estimates",     icon: "MessageSquare" },
-  { label: "Fast Response Time", icon: "Zap" },
-];
-
-export const SERVICES_SECTION = {
-  intro: "Our Expertise",
-  headline: "What We Do Best",
-};
-
-export const SERVICES = [
-  {
-    name: "Concrete Driveways",
-    desc: "Custom concrete driveways built to last. From new pours to full replacements, we deliver a smooth, durable finish that boosts your home's curb appeal and value.",
-  },
-  {
-    name: "Patios & Walkways",
-    desc: "Transform your outdoor space with beautifully crafted patios and walkways. Choose from classic finishes or stamped designs to fit your style.",
-  },
-  {
-    name: "Foundations & Slabs",
-    desc: "Solid, code-compliant concrete foundations and slabs for homes, additions, garages, and commercial projects. Built right from the ground up.",
-  },
-  {
-    name: "Stamped & Decorative Concrete",
-    desc: "Add character to your property with stamped, stained, and decorative concrete. Get the look of brick, stone, or tile at a fraction of the cost.",
-  },
-  {
-    name: "Concrete Repair & Resurfacing",
-    desc: "Cracked, uneven, or worn-out concrete? We repair, resurface, and restore old slabs to look new again — saving you the cost of full replacement.",
-  },
-  {
-    name: "Home Remodeling",
-    desc: "Full-service remodeling for kitchens, bathrooms, and interiors. Our team handles every detail, delivering quality craftsmanship and clean finishes.",
-  },
-];
 
 export const ABOUT = {
-  intro: "About Us",
-  headline: "We Don't Cut Corners. We Pour Them Right.",
+  headline: "We Build Fences That Last.",
   body1:
-    "Royalty Concrete & Remodeling Services LLC has been transforming Miami homes and businesses with quality concrete and remodeling work. Based in the heart of Miami, we serve homeowners, contractors, and commercial clients throughout Miami-Dade County.",
+    "Macias Multy Services LLC is a trusted fence contractor serving Miami and South Florida. We specialize in residential and commercial fence installation, repair, and gate work — handling every job with precision and care.",
   body2:
-    "From driveways, patios, and foundations to kitchen and bathroom remodels — every project gets the same attention to detail. We show up on time, communicate clearly, and finish what we start.",
-  bullets: [
-    "Licensed & Insured",
-    "Upfront Pricing",
-    "Free Estimates",
-    "Clean & Respectful",
-  ],
-  teamPhotoAlt: "Royalty Concrete & Remodeling pool patio project in Miami",
-  ctaLabel: "Call Us Now",
+    "Whether you need a new privacy fence, a quick repair after storm damage, or a custom gate for your driveway — our team shows up on time, works clean, and delivers results you'll be proud of.",
+  teamPhotoAlt: "Macias Multy Services fence installation project in Miami",
 };
 
 export const CTA_BANNER = {
-  headline: "Ready to Build Something Great?",
-  body: "Get a free quote today. Whether it's a new driveway, a backyard patio, or a full remodel — we'll handle it from start to finish.",
+  headline: "Need a Fence? We've Got You.",
+  body: "Get a free quote today. Installation, repair, or gates — we handle it all across Miami and South Florida. Available 24 hours a day.",
 };
 
-export const REVIEWS_SECTION = {
-  intro: "Client Testimonials",
-  headline: "Don't Just Take Our Word For It",
-  showSection: true, // set to false to hide the whole reviews section + nav link
-};
+export const BADGES = [
+  "Licensed & Insured",
+  "Free Estimates",
+  "Available 24/7",
+  "Upfront Pricing",
+];
+
+export const SERVICES = [
+  {
+    name: "Fence Installation",
+    desc: "New fence installations for residential and commercial properties. We work with wood, vinyl, chain link, aluminum, and more — built to last in Florida's climate.",
+  },
+  {
+    name: "Fence Repair",
+    desc: "Damaged, leaning, or rotting fence? We fix it fast. From broken posts and rails to full panel replacements, we restore your fence to like-new condition.",
+  },
+  {
+    name: "Wood Fencing",
+    desc: "Beautiful custom wood fences that add privacy and curb appeal. We use quality treated lumber and expert craftsmanship for a fence that looks great for years.",
+  },
+  {
+    name: "Vinyl & PVC Fencing",
+    desc: "Low-maintenance vinyl fences in a variety of styles and colors. Durable, weather-resistant, and perfect for South Florida's heat and humidity.",
+  },
+  {
+    name: "Chain Link Fencing",
+    desc: "Affordable and durable chain link fences for residential, commercial, and security applications. Quick installation with long-lasting results.",
+  },
+  {
+    name: "Gate Installation & Repair",
+    desc: "We install and repair manual and automatic gates for driveways and entrances. Secure, smooth operation — done right the first time.",
+  },
+];
 
 export const REVIEWS = [
   {
-    text: "Royalty Concrete poured a new driveway and walkway for us in Miami and it came out beautiful. The team was professional, the work was clean, and they finished on schedule. Very happy with the results.",
-    author: "Carlos M.",
+    text: "Macias Multy Services did an amazing job replacing our old wooden fence. They were on time, professional, and the finished product looks incredible. Definitely recommend them to anyone in Miami.",
+    author: "Roberto G.",
     source: "Google Review",
   },
   {
-    text: "Hired them for a full patio remodel with stamped concrete. The crew showed up when they said they would and the finished work looks amazing. Fair pricing for the quality.",
-    author: "Jessica R.",
+    text: "Called them for an emergency fence repair after a storm knocked part of it down. They came out the same day and had it fixed quickly. Great price and great service — 5 stars all the way.",
+    author: "Maria S.",
     source: "Google Review",
   },
   {
-    text: "Royalty handled both our foundation repair and bathroom remodel. Honest, hardworking team that takes pride in what they do. Would absolutely hire them again.",
-    author: "David L.",
+    text: "Had them install a full vinyl privacy fence around our backyard. The crew was clean, respectful, and finished ahead of schedule. Our neighbors already asked for their number!",
+    author: "James T.",
     source: "Google Review",
   },
 ];
 
-export const CONTACT_SECTION = {
-  intro: "Get In Touch",
-  headline: "Ready to Help, Right Now",
-  body: "Call, text, or email us — we respond fast, 24 hours a day, 7 days a week.",
-};
-
-export const FOOTER = {
-  // Defaults to BUSINESS.shortName if empty
-  copyrightLine: "",
-  license: "Licensed & Insured",
-};
-
 // ============================================================
 //  THEME — HSL values only (no "hsl()" wrapper)
-//  Applied at runtime via the useApplyTheme() hook in App.tsx
-//  which sets these as CSS variables on document.documentElement
-//  (Tailwind v4 reads them through the @theme directive in index.css)
+//  primary        = brand accent color (buttons, highlights)
+//  background     = page background
+//  card           = card / panel background
+//  accent         = secondary highlight
 // ============================================================
 
 export const THEME = {
-  background: "215 35% 8%",     // deep ocean navy
-  foreground: "35 30% 96%",     // warm off-white
+  primary: "142 71% 30%",      // Tier 1 dark green
+  primaryFg: "0 0% 100%",
+  background: "215 35% 8%",    // Deep navy
+  foreground: "35 30% 96%",
   card: "215 28% 13%",
-  cardForeground: "35 30% 96%",
-  cardBorder: "180 35% 30%",
-  primary: "217 91% 55%",       // bold blue
-  primaryForeground: "0 0% 100%",
-  muted: "215 28% 13%",
-  mutedForeground: "35 15% 70%",
-  accent: "199 89% 48%",        // sky blue accent
-  accentForeground: "0 0% 100%",
+  cardFg: "35 30% 96%",
+  accent: "142 71% 25%",       // Tier 1 dark green marker
+  accentFg: "215 35% 8%",
+  mutedFg: "35 15% 70%",
   border: "215 25% 20%",
-  input: "215 25% 20%",
-  ring: "217 91% 55%",
 };
+
+// ============================================================
+//  PITCH_MODE — Set to `true` when you're shipping a design pitch
+//  without a backend deployed yet. The quote form will hide its
+//  submit button and show a "We'll call you back at <phone>"
+//  message instead of trying to POST to /api/quote.
+//  Flip to `false` when the backend is live.
+// ============================================================
+
+export const PITCH_MODE = false;
