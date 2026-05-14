@@ -54,7 +54,7 @@ echo "════════════════════════�
 check "Render /api/healthz returns ok"      "curl -fsS '$RENDER_URL/api/healthz'"                  '"status":"ok"'
 check "Vercel root loads (HTTP 200)"        "curl -fsSI '$VERCEL_URL' | head -1"                   "200"
 check "Vercel /api proxy → Render"          "curl -fsS '$VERCEL_URL/api/healthz'"                  '"status":"ok"'
-check "Admin route exists (not 404)"        "curl -s -o /dev/null -w '%{http_code}' -X POST '$RENDER_URL/api/admin/login' -H 'Content-Type: application/json' -d '{\"password\":\"wrong\"}'"  "401"
+check "Admin route exists (not 404)"        "curl -s -o /dev/null -w '%{http_code}' -X POST '$RENDER_URL/api/admin/login' -H 'Content-Type: application/json' -d '{\"username\":\"smoketest\",\"password\":\"wrong\"}'"  "401"
 
 echo ""
 echo "═══════════════════════════════════════════════════════"

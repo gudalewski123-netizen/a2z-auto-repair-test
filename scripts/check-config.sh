@@ -25,7 +25,7 @@ fi
 
 EMAIL_EMPTY=$(grep -cE '^\s*email:\s*""\s*,?\s*$' "$CONFIG" || true)
 PITCH_TRUE=$(grep -cE '^export const PITCH_MODE\s*=\s*true' "$CONFIG" || true)
-NAME_PLACEHOLDER=$(grep -cE 'name:\s*"\[Client Business Name\]"' "$CONFIG" || true)
+NAME_PLACEHOLDER=$(grep -cE 'name:\s*"\[Business Name\]"' "$CONFIG" || true)
 
 if [ "$EMAIL_EMPTY" -gt 0 ] && [ "$PITCH_TRUE" -eq 0 ]; then
   echo ""
@@ -50,7 +50,7 @@ fi
 
 if [ "$NAME_PLACEHOLDER" -gt 0 ] && [ "$PITCH_TRUE" -eq 0 ]; then
   echo ""
-  echo "⚠ BUILD WARNING — BUSINESS.name still '[Client Business Name]'"
+  echo "⚠ BUILD WARNING — BUSINESS.name still '[Business Name]'"
   echo "  You probably forgot to customize config.ts for this client."
   echo "  Override: SKIP_CONFIG_CHECK=1 pnpm build"
   echo ""

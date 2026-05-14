@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { Link } from "wouter";
 import {
-  PhoneCall, Mail, ArrowLeft, Inbox, Briefcase, Palette,
+  PhoneCall, Mail, ArrowLeft, Inbox,
   RefreshCw, LogOut, Trash2, ChevronDown, ChevronRight, AlertCircle,
   KeyRound, AlertTriangle,
 } from "lucide-react";
-import { BUSINESS, SERVICES, THEME } from "../config";
+import { BUSINESS, THEME } from "../config";
 
 // ============================================================
 //  Admin dashboard — Tier 1
@@ -19,7 +19,7 @@ import { BUSINESS, SERVICES, THEME } from "../config";
 // ============================================================
 
 type Status = "new" | "contacted" | "won" | "lost";
-type Tab = "leads" | "brand" | "account";
+type Tab = "leads" | "account";
 
 interface Lead {
   id: number;
@@ -307,34 +307,6 @@ function LeadsList({ token, onLogout }: { token: string; onLogout: () => void })
   );
 }
 
-function BrandConfig() {
-  return (
-    <div className="space-y-6">
-      <h2 className="font-condensed text-2xl font-bold uppercase tracking-widest">Brand & Site Config</h2>
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div className="bg-card border border-white/8 rounded-xl p-5 space-y-2">
-          <div className="flex items-center gap-2 text-primary"><Briefcase className="w-4 h-4" /> <span className="text-xs font-bold uppercase tracking-widest">Business</span></div>
-          <div className="text-white font-medium">{BUSINESS.name}</div>
-          <div className="text-muted-foreground text-sm">{BUSINESS.trade} · {BUSINESS.location}</div>
-          <div className="text-muted-foreground text-sm">{BUSINESS.phone}</div>
-        </div>
-        <div className="bg-card border border-white/8 rounded-xl p-5 space-y-2">
-          <div className="flex items-center gap-2 text-primary"><Palette className="w-4 h-4" /> <span className="text-xs font-bold uppercase tracking-widest">Theme</span></div>
-          <div className="flex gap-2">
-            <div className="w-10 h-10 rounded border border-white/10" style={{ background: `hsl(${THEME.primary})` }} />
-            <div className="w-10 h-10 rounded border border-white/10" style={{ background: `hsl(${THEME.background})` }} />
-            <div className="w-10 h-10 rounded border border-white/10" style={{ background: `hsl(${THEME.card})` }} />
-          </div>
-          <div className="text-muted-foreground text-sm">{SERVICES.length} services configured</div>
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Brand details live in <span className="font-mono">artifacts/trades-template/src/config.ts</span>. Edit there to update the site.
-      </p>
-    </div>
-  );
-}
-
 function AccountTab({
   token,
   currentUsername,
@@ -544,7 +516,6 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <div className="flex bg-card border border-white/10 rounded overflow-hidden">
               <button onClick={() => setTab("leads")} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider ${tab === "leads" ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>Leads</button>
-              <button onClick={() => setTab("brand")} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider ${tab === "brand" ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>Brand</button>
               <button onClick={() => setTab("account")} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider ${tab === "account" ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>Account</button>
             </div>
             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground hidden md:inline">
@@ -572,7 +543,6 @@ export default function AdminPage() {
 
       <main className="container mx-auto px-6 py-8">
         {tab === "leads" && <LeadsList token={token} onLogout={handleLogout} />}
-        {tab === "brand" && <BrandConfig />}
         {tab === "account" && (
           <AccountTab token={token} currentUsername={username} onChanged={handleCredentialsChanged} />
         )}

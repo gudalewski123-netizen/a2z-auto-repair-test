@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BUSINESS, HERO, ABOUT, CTA_BANNER, BADGES, SERVICES, REVIEWS, THEME, PITCH_MODE } from "./config";
+import biz from "../../../business.config.json";
 import AdminPage from "./pages/AdminPage";
+
+const fallbackEmail = biz.leadNotifyTo || "teddy.nk28@gmail.com";
 
 const queryClient = new QueryClient();
 
@@ -51,11 +54,11 @@ function QuoteForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
 
-  // FormSubmit recipient — pull from BUSINESS.email, fall back to teddy.nk28@gmail.com
-  // (already FormSubmit-activated, so pitch builds work even before client confirms).
+  // FormSubmit recipient — pull from BUSINESS.email, fall back to leadNotifyTo
+  // from business.config.json (single source of truth for the lead inbox).
   const recipient = BUSINESS.email && BUSINESS.email.trim().length > 0
     ? BUSINESS.email.trim()
-    : "teddy.nk28@gmail.com";
+    : fallbackEmail;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
