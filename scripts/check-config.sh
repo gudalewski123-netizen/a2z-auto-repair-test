@@ -26,6 +26,7 @@ fi
 EMAIL_EMPTY=$(grep -cE '^\s*email:\s*""\s*,?\s*$' "$CONFIG" || true)
 PITCH_TRUE=$(grep -cE '^export const PITCH_MODE\s*=\s*true' "$CONFIG" || true)
 NAME_PLACEHOLDER=$(grep -cE 'name:\s*"\[Business Name\]"' "$CONFIG" || true)
+BRACKETS=$(grep -cE '"\[[^]]+\]"' "$CONFIG" || true)
 
 if [ "$EMAIL_EMPTY" -gt 0 ] && [ "$PITCH_TRUE" -eq 0 ]; then
   echo ""
@@ -57,4 +58,13 @@ if [ "$NAME_PLACEHOLDER" -gt 0 ] && [ "$PITCH_TRUE" -eq 0 ]; then
   exit 1
 fi
 
-echo "✓ Config check passed (email is set or PITCH_MODE=true)"
+if [ "$BRACKETS" -gt 0 ] && [ "$PITCH_TRUE" -eq 0 ]; then
+  echo ""
+  echo "❌ BUILD BLOCKED — $CONFIG still contains placeholder values like [Something]"
+  echo "   Edit business.config.json then run: node scripts/sync-business-info.mjs"
+  echo "   Override (use sparingly): SKIP_CONFIG_CHECK=1 pnpm build"
+  echo ""
+  exit 1
+fi
+
+echo "✓ Config check passed (email is set, no placeholders remain, or PITCH_MODE=true)"
