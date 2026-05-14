@@ -38,13 +38,13 @@ export const HERO = {
 export const ABOUT = {
   headline: "[About headline]",
   body1: "[First paragraph about the business.]",
-  body2: "[Second paragraph.]",
-  teamPhotoAlt: "[Alt text]",
+  body2: "[Second paragraph — story, values, or differentiator.]",
+  teamPhotoAlt: "[Alt text for team photo]",
 };
 
 export const CTA_BANNER = {
   headline: "[CTA headline]",
-  body: "[CTA body copy.]",
+  body: "[CTA body copy — what to do and why now.]",
 };
 
 export const BADGES = [

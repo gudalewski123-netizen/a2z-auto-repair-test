@@ -1,4 +1,4 @@
-# CLAUDE.md — TIER 2 Template (TIER-2-TEMPLATE)
+# CLAUDE.md — TIER 1 Template (TIER1REMIXONLYTemplate)
 
 ## What this is
 The **Tier 1 starter template** for new client sites. Use this when a client needs:
@@ -17,7 +17,7 @@ If they need payments + CRM + sales reps, use **TIER-2-TEMPLATE** instead.
 - **Optional:** Cloudflare DNS for custom domain
 
 ## Where the Neon DB is
-- Pre-provisioned at Neon project `tier2-template-prod` (`proud-glitter-61389487`)
+- Pre-provisioned at Neon project `tier1-template-prod` (`gentle-cloud-99890584`)
 - Connection string + secrets in `~/Claude/cowork-handoff/TIER_TEMPLATES_NEON_CREDENTIALS.txt`
 - The DB is shared across all forks of this template — when you spin up a real client site, **create a fresh Neon project for them** instead of reusing this DB.
 
@@ -60,7 +60,7 @@ If you're running this through Cowork (Claude desktop), the sandbox is isolated:
 
 1. **`~/Claude/cowork-handoff/` is NOT auto-mounted.** Paste API tokens inline in your first message of every new task — don't rely on the sandbox reading credential files from there.
 
-2. **Sandbox can't auth to GitHub for private clones.** Mount the parent `~/Projects/` folder when starting the task; the agent will copy from `~/Projects/templates/TIER-2-TEMPLATE/` locally instead of cloning from GitHub.
+2. **Sandbox can't auth to GitHub for private clones.** Mount the parent `~/Projects/` folder when starting the task; the agent will copy from `~/Projects/templates/TIER1REMIXONLYTemplate/` locally instead of cloning from GitHub.
 
 3. **Some mounts are read-only / block deletes.** If the agent leaves a `README_TODO.md` flagging files to remove, do that manually via Finder or Terminal:
    ```bash
@@ -160,22 +160,90 @@ FormSubmit emails frequently land in **Spam** or **Promotions**, especially the 
 
 ---
 
-## Build-time safety nets
+## Build-time safety nets (added priorities 4 + 5)
 
-Same as Tier 1: `scripts/check-config.sh` (prebuild validator) + `scripts/smoke-test.sh` (post-deploy verification). See Tier 1's CLAUDE.md for details.
+### `scripts/check-config.sh` — pre-build config validator
+Wired into `artifacts/trades-template/package.json`'s `prebuild` hook. Fails the Vercel/local build if:
+
+- `BUSINESS.email` is empty AND `PITCH_MODE` is false → would silently route leads to `teddy.nk28@gmail.com`
+- `BUSINESS.name` is still `[Client Business Name]` placeholder AND `PITCH_MODE` is false → forgot to customize
+
+Bypass for genuine edge cases: `SKIP_CONFIG_CHECK=1 pnpm build`.
+
+### `scripts/smoke-test.sh` — post-deploy verification
+Run after every `pnpm push` / Render rebuild:
+```bash
+./scripts/smoke-test.sh https://<render-url> https://<vercel-url>
+```
+
+Checks Render health, Vercel root, Vercel→Render API proxy, admin route mounted. ~10 seconds, catches the 4 most common breakages. Step is also baked into `CHECKLIST.md` so it's hard to forget.
 
 ---
 
-## Tier 2 — Leads dashboard
+## Tier 1 — Leads dashboard (delivers the "Admin dashboard for leads" promise)
 
-Same architecture as Tier 1's leads dashboard:
-- Schema: `leadsTable` in `lib/db/src/schema/leads.ts`
-- Routes: `POST /api/leads`, `GET/PATCH/DELETE /api/admin/leads`, `POST /api/admin/login`
-- Auth: `ADMIN_PASSWORD` env var, sent as Bearer token
-- UI: `/admin` page with Leads tab (default) + Brand tab
-- QuoteForm dual-writes to `/api/leads` and FormSubmit in parallel
+### How leads flow
+1. **Customer submits the quote form** on the public site
+2. **QuoteForm.handleSubmit** does two things in parallel:
+   - `POST /api/leads` → saves to the DB (source of truth for the dashboard)
+   - `POST formsubmit.co/<BUSINESS.email>` → emails the recipient (notification)
+3. If backend is down or unreachable, the FormSubmit email still goes out — no lost leads.
+4. If FormSubmit is unactivated, the lead still shows in the dashboard.
 
-Tier 2 ALSO has the full CRM (contacts, jobs, activities, followups) — those live in `artifacts/crm/` and have their own admin flows. The leads dashboard described here is the entry point; once a lead becomes a customer you'd promote them into the CRM (manual today; could be a `POST /api/admin/leads/:id/promote-to-contact` endpoint later).
+### Admin auth (username + in-app credential rotation)
+
+Default factory login: username `Admin`, password `Password`. Active only while
+the `admin_users` table is empty. Once the operator rotates credentials in-app,
+the defaults stop working.
+
+Flow:
+- Sign in at `/admin` with username + password → backend issues a JWT signed
+  with `SESSION_SECRET`, valid for 7 days
+- Frontend stores it in `localStorage` as `admin_token` and sends it on every
+  protected request as `Authorization: Bearer <token>`
+- A sticky orange banner appears post-login if `admin_users` is empty,
+  prompting the user to rotate credentials in the **Account** tab
+- "Sign out" clears localStorage
+
+Rotating credentials (Account tab):
+- Requires current password + new username (≥3 chars) + new password (≥8 chars)
+- Replaces the `admin_users` row atomically (DELETE + INSERT in a transaction)
+- All passwords are bcrypt-hashed (cost 12)
+- After rotation the operator is signed out and must re-login with the new pair
+
+Emergency recovery — `ADMIN_PASSWORD` env var on Render is a break-glass
+override. Any username + this password is accepted, regardless of what's in
+the DB. Use it if you forget the in-app credentials.
+
+Full reset (forgot everything, no `ADMIN_PASSWORD` either):
+```bash
+psql "$DATABASE_URL" -c "DELETE FROM admin_users;"
+```
+After this the default `Admin` / `Password` login works again.
+
+Endpoints:
+- `POST /api/admin/login` — body `{ username, password }` → `{ token, username }`
+- `GET /api/admin/me` — `{ username, isDefault }` (isDefault means table is empty)
+- `POST /api/admin/credentials` — body `{ currentPassword, newUsername, newPassword }`
+- `GET /api/admin/leads` — list all leads, newest first
+- `PATCH /api/admin/leads/:id` — update status or adminNotes
+- `DELETE /api/admin/leads/:id` — hard delete
+
+### Statuses
+`new` → `contacted` → `won` or `lost`. Color-coded badges in the UI. Click any lead row to expand and update status / add internal notes.
+
+### Backend env vars required
+- `SESSION_SECRET` — auto-generated by render.yaml (signs admin JWTs; legacy `JWT_SECRET` still works as fallback)
+- `ADMIN_PASSWORD` — auto-generated by render.yaml (emergency override only — not the primary login)
+- `DATABASE_URL` — Neon connection string
+
+### What the dashboard shows
+- **Leads tab** (default): table of all leads with date, name, service, phone, status badge. Click row to expand → full message, status dropdown, internal notes textarea (autosaves on blur), delete button. Status filter pills at the top (all / new / contacted / won / lost).
+- **Brand tab**: BUSINESS name + theme colors + services count. Reference view of what config.ts is shipping.
+- **Account tab**: change username + password.
+
+### When this might 503
+- Database not reachable → `/api/admin/leads` and `/api/admin/me` return 500. Check Neon project status.
 
 ## Design Workflow
 Before writing any frontend code, read `FRONTEND.md` — it has the anti-generic guardrails, screenshot workflow, and business-info propagation rules.

@@ -59,7 +59,7 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 
 ## Leads dashboard
 - [ ] Visit `/admin` on the deployed site
-- [ ] Log in with `ADMIN_PASSWORD` (Render env var)
+- [ ] Log in with default `Admin` / `Password` (or new credentials if already rotated)
 - [ ] Submit a test quote on the public site → verify it appears in /admin within 5s
 - [ ] Update its status to "contacted" → reload → status persists
 - [ ] Click an email link → opens mail client; click a phone link → starts a call
@@ -67,6 +67,13 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 ## Smoke test (after every deploy)
 - [ ] `./scripts/smoke-test.sh https://<render-url> https://<vercel-url>` returns all ✓
 - [ ] If any check fails, see error explanations at the bottom of smoke-test.sh
+
+## First admin login (immediately after first deploy)
+- [ ] Open `/admin` on the live site
+- [ ] Sign in with the factory default: username `Admin`, password `Password`
+- [ ] In the **Account** tab, set a real username + password (≥8 chars)
+- [ ] Confirm the orange "default credentials" banner is gone after re-login
+- [ ] Save the new credentials in your password manager (and hand off to client at the end)
 
 ## Final hand-off
 - [ ] Admin password handed to client

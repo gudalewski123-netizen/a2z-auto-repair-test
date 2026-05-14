@@ -79,16 +79,4 @@ router.delete("/admin/leads/:id", requireAdmin, async (req: Request, res: Respon
   res.json({ ok: true });
 });
 
-// POST /api/admin/login — admin. Accepts { password } and returns { ok: true }
-// IF the password matches ADMIN_PASSWORD. The frontend then stores the password
-// in localStorage as the bearer token for subsequent requests.
-router.post("/admin/login", async (req: Request, res: Response): Promise<void> => {
-  const { password } = req.body as { password?: string };
-  if (!password || password !== process.env.ADMIN_PASSWORD) {
-    res.status(401).json({ error: "Invalid password" });
-    return;
-  }
-  res.json({ ok: true });
-});
-
 export default router;

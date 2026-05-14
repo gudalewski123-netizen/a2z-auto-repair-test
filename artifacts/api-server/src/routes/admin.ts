@@ -1,175 +1,133 @@
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
-import { eq, desc } from "drizzle-orm";
-import { db, usersTable, siteChangeRequestsTable } from "@workspace/db";
+import { db, siteChangeRequestsTable, usersTable, adminUsersTable } from "@workspace/db";
+import { eq, desc, sql } from "drizzle-orm";
+import {
+  requireAdmin,
+  signAdminSession,
+  verifyAdminCredentials,
+} from "../lib/auth";
+import type { Request, Response } from "express";
 
 const router: IRouter = Router();
 
-const ADMIN_API_KEY = process.env.ADMIN_API_KEY ?? "";
-if (!ADMIN_API_KEY) {
-  throw new Error("ADMIN_API_KEY environment variable is required");
-}
-
-function requireAdminKey(req: Request, res: Response, next: NextFunction): void {
-  const key = req.headers["x-admin-api-key"];
-  if (key !== ADMIN_API_KEY) {
-    res.status(403).json({ error: "Invalid admin API key" });
-    return;
-  }
-  next();
-}
-
-router.use("/admin", requireAdminKey);
-
-router.post("/admin/users", async (req, res): Promise<void> => {
-  const { email, password, businessName } = req.body;
-
-  if (!email || !password || !businessName) {
-    res.status(400).json({ error: "email, password, and businessName are required" });
+router.post("/admin/login", async (req: Request, res: Response): Promise<void> => {
+  const { username, password } = req.body ?? {};
+  if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
+    res.status(400).json({ error: "Username and password are required" });
     return;
   }
 
-  const [existing] = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(eq(usersTable.email, email.toLowerCase().trim()))
-    .limit(1);
-
-  if (existing) {
-    res.status(409).json({ error: "An account with this email already exists" });
+  const ok = await verifyAdminCredentials(username, password);
+  if (!ok) {
+    res.status(401).json({ error: "Invalid credentials" });
     return;
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const [user] = await db
-    .insert(usersTable)
-    .values({
-      email: email.toLowerCase().trim(),
-      password: hashedPassword,
-      businessName: businessName.trim(),
-    })
-    .returning({
-      id: usersTable.id,
-      email: usersTable.email,
-      businessName: usersTable.businessName,
-      createdAt: usersTable.createdAt,
-    });
-
-  res.status(201).json(user);
+  const token = signAdminSession(username);
+  res.json({ token, username });
 });
 
-router.get("/admin/users", async (_req, res): Promise<void> => {
-  const users = await db
-    .select({
-      id: usersTable.id,
-      email: usersTable.email,
-      businessName: usersTable.businessName,
-      createdAt: usersTable.createdAt,
-    })
-    .from(usersTable)
-    .orderBy(usersTable.createdAt);
-
-  res.json(users);
+router.get("/admin/me", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const username = (req as any).admin?.username ?? "";
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(adminUsersTable);
+  res.json({ username, isDefault: count === 0 });
 });
 
-router.delete("/admin/users/:id", async (req, res): Promise<void> => {
-  const id = Number(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid user ID" });
+router.post("/admin/credentials", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { currentPassword, newUsername, newPassword } = req.body ?? {};
+  const currentUsername = (req as any).admin?.username ?? "";
+
+  if (
+    typeof currentPassword !== "string" ||
+    typeof newUsername !== "string" ||
+    typeof newPassword !== "string"
+  ) {
+    res.status(400).json({ error: "currentPassword, newUsername, and newPassword are required" });
     return;
   }
 
-  const [deleted] = await db
-    .delete(usersTable)
-    .where(eq(usersTable.id, id))
-    .returning({ id: usersTable.id });
-
-  if (!deleted) {
-    res.status(404).json({ error: "User not found" });
+  const validCurrent = await verifyAdminCredentials(currentUsername, currentPassword);
+  if (!validCurrent) {
+    res.status(401).json({ error: "Current password is incorrect" });
     return;
   }
 
-  res.json({ success: true, deletedId: deleted.id });
+  if (newUsername.length < 3) {
+    res.status(400).json({ error: "New username must be at least 3 characters" });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: "New password must be at least 8 characters" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+
+  await db.transaction(async (tx: typeof db) => {
+    await tx.delete(adminUsersTable);
+    await tx.insert(adminUsersTable).values({ username: newUsername, passwordHash });
+  });
+
+  res.json({ success: true, username: newUsername });
 });
 
-router.patch("/admin/users/:id/password", async (req, res): Promise<void> => {
-  const id = Number(req.params.id);
-  const { password } = req.body;
-
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid user ID" });
-    return;
-  }
-
-  if (!password || password.length < 6) {
-    res.status(400).json({ error: "Password must be at least 6 characters" });
-    return;
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const [updated] = await db
-    .update(usersTable)
-    .set({ password: hashedPassword })
-    .where(eq(usersTable.id, id))
-    .returning({ id: usersTable.id, email: usersTable.email });
-
-  if (!updated) {
-    res.status(404).json({ error: "User not found" });
-    return;
-  }
-
-  res.json({ success: true, id: updated.id, email: updated.email });
-});
-
-router.get("/admin/site-changes", async (_req, res): Promise<void> => {
+router.get("/admin/site-changes", requireAdmin, async (req: Request, res: Response): Promise<void> => {
   const requests = await db
     .select({
       id: siteChangeRequestsTable.id,
       userId: siteChangeRequestsTable.userId,
+      userEmail: usersTable.email,
+      userBusinessName: usersTable.businessName,
       requestType: siteChangeRequestsTable.requestType,
       businessName: siteChangeRequestsTable.businessName,
       phone: siteChangeRequestsTable.phone,
       aboutText: siteChangeRequestsTable.aboutText,
       servicesText: siteChangeRequestsTable.servicesText,
-      photoNotes: siteChangeRequestsTable.photoNotes,
       pricingNotes: siteChangeRequestsTable.pricingNotes,
+      photoNotes: siteChangeRequestsTable.photoNotes,
       promptText: siteChangeRequestsTable.promptText,
       status: siteChangeRequestsTable.status,
       adminNotes: siteChangeRequestsTable.adminNotes,
       createdAt: siteChangeRequestsTable.createdAt,
-      userEmail: usersTable.email,
-      businessNameUser: usersTable.businessName,
+      updatedAt: siteChangeRequestsTable.updatedAt,
     })
     .from(siteChangeRequestsTable)
-    .leftJoin(usersTable, eq(siteChangeRequestsTable.userId, usersTable.id))
+    .innerJoin(usersTable, eq(siteChangeRequestsTable.userId, usersTable.id))
     .orderBy(desc(siteChangeRequestsTable.createdAt));
 
   res.json(requests);
 });
 
-router.patch("/admin/site-changes/:id", async (req, res): Promise<void> => {
-  const id = Number(req.params.id);
-  const { status, adminNotes } = req.body;
-
+router.patch("/admin/site-changes/:id", requireAdmin, async (req: Request, res: Response): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
   if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid ID" });
+    res.status(400).json({ error: "Invalid id" });
     return;
   }
 
+  const { status, adminNotes } = req.body;
   const validStatuses = ["pending", "in_progress", "completed"];
   if (status && !validStatuses.includes(status)) {
     res.status(400).json({ error: "Invalid status" });
     return;
   }
 
+  const updates: Record<string, unknown> = {};
+  if (status) updates.status = status;
+  if (adminNotes != null) updates.adminNotes = adminNotes;
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "Nothing to update" });
+    return;
+  }
+
   const [updated] = await db
     .update(siteChangeRequestsTable)
-    .set({
-      ...(status ? { status } : {}),
-      ...(adminNotes !== undefined ? { adminNotes } : {}),
-    })
+    .set(updates)
     .where(eq(siteChangeRequestsTable.id, id))
     .returning();
 
