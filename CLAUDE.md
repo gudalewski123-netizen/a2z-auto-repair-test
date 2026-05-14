@@ -1,13 +1,14 @@
-# CLAUDE.md — TIER 1 Template (TIER1REMIXONLYTemplate)
+# CLAUDE.md — TIER 2 Template (TIER-2-TEMPLATE)
 
 ## What this is
-The **Tier 1 starter template** for new client sites. Use this when a client needs:
-- A marketing/brochure site
-- A client portal where they can request site changes
-- Admin login (single admin)
-- No payment processing
+The **Tier 2 starter template** for new client sites. Use this when a client needs:
+- Everything Tier 1 has (marketing site, admin login, FormSubmit lead capture)
+- Plus a full CRM (contacts, pipeline, jobs)
+- Plus optional online booking (Cal.com or any iframe-friendly scheduler)
+- Plus a multilingual UI (English, Spanish, Chinese, Tagalog, Vietnamese)
+- Plus the TextFlow SMS automations (Phase 2 — wired into CRM events)
 
-If they need payments + CRM + sales reps, use **TIER-2-TEMPLATE** instead.
+For lightweight marketing-only sites, use **TIER1REMIXONLYTemplate** instead.
 
 ## Stack (when deployed)
 - **Frontend:** Vercel (artifacts/trades-template/)
@@ -17,7 +18,7 @@ If they need payments + CRM + sales reps, use **TIER-2-TEMPLATE** instead.
 - **Optional:** Cloudflare DNS for custom domain
 
 ## Where the Neon DB is
-- Pre-provisioned at Neon project `tier1-template-prod` (`gentle-cloud-99890584`)
+- Pre-provisioned at Neon project `tier2-template-prod` (`proud-glitter-61389487`)
 - Connection string + secrets in `~/Claude/cowork-handoff/TIER_TEMPLATES_NEON_CREDENTIALS.txt`
 - The DB is shared across all forks of this template — when you spin up a real client site, **create a fresh Neon project for them** instead of reusing this DB.
 
@@ -60,7 +61,7 @@ If you're running this through Cowork (Claude desktop), the sandbox is isolated:
 
 1. **`~/Claude/cowork-handoff/` is NOT auto-mounted.** Paste API tokens inline in your first message of every new task — don't rely on the sandbox reading credential files from there.
 
-2. **Sandbox can't auth to GitHub for private clones.** Mount the parent `~/Projects/` folder when starting the task; the agent will copy from `~/Projects/templates/TIER1REMIXONLYTemplate/` locally instead of cloning from GitHub.
+2. **Sandbox can't auth to GitHub for private clones.** Mount the parent `~/Projects/` folder when starting the task; the agent will copy from `~/Projects/templates/TIER-2-TEMPLATE/` locally instead of cloning from GitHub.
 
 3. **Some mounts are read-only / block deletes.** If the agent leaves a `README_TODO.md` flagging files to remove, do that manually via Finder or Terminal:
    ```bash
@@ -250,3 +251,61 @@ Before writing any frontend code, read `FRONTEND.md` — it has the anti-generic
 
 ## Business Info Propagation
 Source of truth: `business.config.json` (root). Run `node scripts/sync-business-info.mjs` to push it into `src/config.ts` and print the env vars for Render.
+
+---
+
+## Multilingual UI (5 languages — auto-enabled)
+
+The site ships with i18n built in. Five languages are wired up out of the box:
+
+| Code | Language     | Native label  |
+|------|--------------|---------------|
+| en   | English      | English       |
+| es   | Spanish      | Español       |
+| zh   | Chinese (Simplified) | 中文 |
+| tl   | Tagalog      | Tagalog       |
+| vi   | Vietnamese   | Tiếng Việt    |
+
+**How it works:**
+
+- `artifacts/trades-template/src/i18n.ts` initializes `i18next` + `react-i18next` with browser language detection. Imported once from `main.tsx` — no provider needed.
+- Translations live in `artifacts/trades-template/src/locales/{en,es,zh,tl,vi}.ts`. The `en.ts` exports the canonical `TranslationKeys` type; the other 4 must satisfy it.
+- The `<LanguageSwitcher />` component (in `src/components/`) renders a globe-icon dropdown in the nav (desktop + mobile menu).
+- Choice persists to `localStorage` under the key `i18nextLng`.
+- **Only UI chrome is translated** (nav, section headers, button labels, footer, contact card labels, quote form). **Business content** (BUSINESS.name, SERVICES, ABOUT bodies, REVIEWS) stays in the source language by design — clients can translate per-language manually if needed.
+
+**Adding more languages:** create `src/locales/<code>.ts`, register it in `i18n.ts`, add it to `SUPPORTED_LANGUAGES`. Done.
+
+**For Miami-area clients specifically:** Haitian Creole (`ht`) and Brazilian Portuguese (`pt-BR`) outrank Chinese/Tagalog/Vietnamese in real customer volume. Easy to swap if a client wants — just translate one of the existing locale files and update `SUPPORTED_LANGUAGES`.
+
+---
+
+## Online booking (optional, Cal.com or similar)
+
+A `<BookingSection />` renders before the QuoteForm IF `business.config.json` has a non-empty `calBookingUrl` field. Otherwise the section is hidden entirely.
+
+**Setup for a client:**
+
+1. Client creates a free Cal.com account → connects their Google/Outlook/iCloud calendar → publishes a public booking page (e.g. `https://cal.com/mikes-lawn-care`).
+2. You set `"calBookingUrl": "https://cal.com/mikes-lawn-care"` in `business.config.json`.
+3. The "Book Online" link automatically appears in the nav, and the booking section renders with an iframe of the scheduler.
+
+**Why Cal.com over a custom Google Calendar integration:**
+- Zero backend code, zero OAuth flow per client
+- Client connects their own calendar, controls their own availability
+- Free for the client's plan
+- The iframe just works; Cal.com sets the right embed headers by default
+
+**Works with any iframe-friendly scheduler** (Calendly, SimplyBook, etc.) — just paste the public booking URL.
+
+---
+
+## Phase 2 features (planned — not yet implemented)
+
+These are queued behind TextFlow API integration. They will land as a separate PR once we have the TextFlow API base URL, auth method, and SMS-send endpoint:
+
+- SMS auto-response on new lead (fires when a QuoteForm submission lands in `/api/leads`)
+- Missed-call text-back (requires TextFlow voice webhooks; pending TextFlow capability check)
+- Automated review-request SMS (fires when a job is marked complete in the CRM)
+
+When TextFlow API details land, the integration should live in `artifacts/api-server/src/lib/textflow.ts` and be triggered from the relevant route handlers. Don't sprinkle SMS calls across the codebase — keep them in one module.
