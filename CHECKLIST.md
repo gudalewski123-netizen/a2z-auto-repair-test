@@ -51,6 +51,20 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] Domain added to Vercel project → SSL provisioned (~5 min)
 - [ ] Site loads at `https://<domain>` and `https://www.<domain>`
 
+## Multilingual (5 languages auto-enabled)
+- [ ] Visit the live site → confirm the globe/language switcher renders in the top-right of the nav
+- [ ] Switch to Spanish → all UI chrome translates (nav, section headers, buttons, footer)
+- [ ] Hard-refresh → language preference persists (stored in `localStorage` under `i18nextLng`)
+- [ ] Verify the 5 supported languages render correctly: English, Spanish, Chinese (Simplified), Tagalog, Vietnamese
+- [ ] Note: business content (services, reviews, about copy) stays in source language by design — clients can manually translate per-language in a future iteration
+
+## Online booking (optional — Cal.com or any embed-friendly scheduler)
+- [ ] Client has connected their calendar (Google/Outlook/iCloud) to a free Cal.com account → has a booking page URL like `https://cal.com/<username>`
+- [ ] `calBookingUrl` set in `business.config.json` to the client's booking page URL
+- [ ] Re-deploy → "Book Online" link appears in the nav, booking section renders before the QuoteForm
+- [ ] iframe loads the scheduler correctly (no X-Frame-Options blocking — Cal.com supports embed by default)
+- [ ] If `calBookingUrl` left empty → section is hidden entirely (no broken iframe)
+
 ## Stripe (only for sites that sell)
 - [ ] Stripe products + prices created (TEST mode first)
 - [ ] Webhook endpoint created at `<render-url>/api/stripe/webhook`
