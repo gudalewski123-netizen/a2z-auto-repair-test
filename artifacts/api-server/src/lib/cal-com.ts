@@ -73,8 +73,10 @@ export async function listAvailableSlots(params: ListSlotsParams = {}): Promise<
 
   const url = new URL(`${CAL_API_BASE}/slots`);
   url.searchParams.set("eventTypeId", String(creds.eventTypeId));
-  url.searchParams.set("startTime", start.toISOString());
-  url.searchParams.set("endTime", end.toISOString());
+  // Cal.com v2 slots API (version 2024-09-04) expects `start` / `end`, NOT
+  // `startTime`/`endTime`. Using the wrong names returns HTTP 400.
+  url.searchParams.set("start", start.toISOString());
+  url.searchParams.set("end", end.toISOString());
 
   const res = await fetch(url.toString(), {
     headers: {
@@ -90,19 +92,21 @@ export async function listAvailableSlots(params: ListSlotsParams = {}): Promise<
   }
 
   // Response shape (as of cal-api-version=2024-09-04):
-  //   { status: "success", data: { slots: { "YYYY-MM-DD": [{ time: "...ISO..." }, ...] } } }
+  //   { status: "success", data: { "YYYY-MM-DD": [{ start: "...ISO..." }, ...] } }
+  // NOTE: slots are keyed by date directly under `data` (no inner "slots" wrapper),
+  // and each slot uses `start`, not `time`.
   const data = (await res.json()) as {
-    data?: { slots?: Record<string, Array<{ time: string }>> };
+    data?: Record<string, Array<{ start: string }>>;
   };
 
-  const slotsByDay = data.data?.slots || {};
+  const slotsByDay = data.data || {};
   const flat: AvailableSlot[] = [];
 
   for (const dayKey of Object.keys(slotsByDay).sort()) {
     for (const slot of slotsByDay[dayKey] || []) {
       flat.push({
-        iso: slot.time,
-        label: formatSlotLabel(slot.time, tz),
+        iso: slot.start,
+        label: formatSlotLabel(slot.start, tz),
       });
       if (flat.length >= 10) break;
     }
