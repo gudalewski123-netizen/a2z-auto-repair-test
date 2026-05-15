@@ -16,7 +16,7 @@ import { db, smsConversationsTable, smsMessagesTable } from "@workspace/db";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { sendSms, verifyTwilioSignature } from "../lib/twilio";
 import { generateReply } from "../lib/sms-reply";
-import { requireAdmin } from "../lib/auth";
+import { requireAdmin, requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 const urlEncoded = express.urlencoded({ extended: false });
@@ -202,7 +202,7 @@ async function handleInboundSms(
 // GET /api/admin/sms/conversations — list all conversations, newest first
 router.get(
   "/admin/sms/conversations",
-  requireAdmin,
+  requireAuth,
   async (_req: Request, res: Response): Promise<void> => {
     const rows = await db
       .select()
@@ -216,7 +216,7 @@ router.get(
 // GET /api/admin/sms/conversations/:id/messages — full message log for one convo
 router.get(
   "/admin/sms/conversations/:id/messages",
-  requireAdmin,
+  requireAuth,
   async (req: Request, res: Response): Promise<void> => {
     const id = parseInt(req.params.id, 10);
     if (Number.isNaN(id)) {
@@ -236,7 +236,7 @@ router.get(
 // (overrides AI; useful when an admin wants to step in)
 router.post(
   "/admin/sms/conversations/:id/reply",
-  requireAdmin,
+  requireAuth,
   async (req: Request, res: Response): Promise<void> => {
     const id = parseInt(req.params.id, 10);
     if (Number.isNaN(id)) {
