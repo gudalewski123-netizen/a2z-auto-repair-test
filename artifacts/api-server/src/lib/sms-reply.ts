@@ -1,9 +1,9 @@
 // SMS reply generator. Three execution modes — picks the best available:
 //
-//   1. AI + Cal.com tools (Phase 2D)
-//      Anthropic Claude Haiku 4.5 with `check_availability` and
-//      `book_appointment` tools. AI runs a multi-turn loop, calling tools
-//      to check the calendar and book the appointment when ready.
+//   1. AI + Cal.com tools (Phase 2D + 2E)
+//      Anthropic Claude Haiku 4.5 with `check_availability`, `book_appointment`,
+//      `reschedule_appointment`, and `cancel_appointment` tools. AI runs a
+//      multi-turn loop, calling tools to manage the customer's booking.
 //      Requires: ANTHROPIC_API_KEY + CAL_COM_API_KEY + CAL_COM_EVENT_TYPE_ID
 //
 //   2. AI without tools (Phase 2B)
@@ -15,8 +15,10 @@
 //
 // Caller code is identical for all three — generateReply() returns the
 // same shape regardless. The `source` field tells you which path ran.
+// `bookingState` captures any Cal.com side effects (booked / rescheduled /
+// cancelled) so the route handler can update the conversation row.
 
-import { listAvailableSlots, createBooking, isCalConfigured } from "./cal-com";
+import { listAvailableSlots, createBooking, rescheduleBooking, cancelBooking, isCalConfigured } from "./cal-com";
 
 interface BusinessContext {
   name: string;
@@ -27,15 +29,36 @@ interface BusinessContext {
   callerPhone?: string;
 }
 
+interface ExistingBooking {
+  /** Cal.com booking UID (string slug, used in reschedule/cancel API calls) */
+  uid: string;
+  /** ISO 8601 start time */
+  scheduledAtIso: string;
+}
+
 export interface ReplyContext {
   business: BusinessContext;
   conversationHistory: Array<{ direction: "inbound" | "outbound"; body: string }>;
   latestInbound: string;
+  /** If this customer has a current booking (from a prior turn), AI can reschedule/cancel it. */
+  existingBooking?: ExistingBooking;
+}
+
+/** Side effects the AI performed this turn — caller updates DB to match. */
+export interface BookingState {
+  /** AI booked a NEW appointment this turn */
+  newBooking?: { uid: string; scheduledAtIso: string };
+  /** AI rescheduled the existing booking — the uid stays the same */
+  rescheduled?: { uid: string; scheduledAtIso: string };
+  /** AI cancelled the existing booking */
+  cancelled?: { uid: string };
 }
 
 export interface ReplyResult {
   text: string;
   source: "ai" | "template";
+  /** Only populated when AI took booking actions during this turn (Phase 2D/2E). */
+  bookingState?: BookingState;
 }
 
 interface PinoLikeLogger {
@@ -60,11 +83,16 @@ export async function generateReply(
   if (apiKey) {
     const useTools = isCalConfigured();
     try {
-      const text = useTools
-        ? await generateWithToolsLoop(ctx, apiKey, logger)
-        : await generateSingleShot(ctx, apiKey, logger);
-      if (text && text.trim().length > 0) {
-        return { text: text.trim(), source: "ai" };
+      if (useTools) {
+        const out = await generateWithToolsLoop(ctx, apiKey, logger);
+        if (out.text && out.text.trim().length > 0) {
+          return { text: out.text.trim(), source: "ai", bookingState: out.bookingState };
+        }
+      } else {
+        const text = await generateSingleShot(ctx, apiKey, logger);
+        if (text && text.trim().length > 0) {
+          return { text: text.trim(), source: "ai" };
+        }
       }
       logger?.warn("AI returned empty reply; falling back to template");
     } catch (err) {
@@ -136,7 +164,7 @@ function noToolsSystemPrompt(ctx: ReplyContext): string {
 }
 
 // =====================================================================
-//  Mode 1: AI with Cal.com booking tools (Phase 2D)
+//  Mode 1: AI with Cal.com booking tools (Phase 2D + 2E)
 // =====================================================================
 
 interface ContentBlock {
@@ -170,32 +198,44 @@ const TOOLS = [
   {
     name: "book_appointment",
     description:
-      "Book a confirmed slot for the customer. Use the EXACT iso timestamp from a check_availability result — do not modify or round it. The customer's name is required; email is optional (Cal.com works without it).",
+      "Book a NEW appointment for the customer. Use the EXACT iso timestamp from a check_availability result — do not modify or round it. Don't call this if the customer already has an existing booking — use reschedule_appointment instead.",
     input_schema: {
       type: "object",
       properties: {
-        start_time_iso: {
-          type: "string",
-          description: "ISO 8601 datetime, copied exactly from a check_availability slot.",
-        },
-        customer_name: {
-          type: "string",
-          description: "Customer's first + last name (or first name if that's all they gave).",
-        },
-        customer_phone: {
-          type: "string",
-          description: "Customer's phone (E.164 format, e.g. +15551234567).",
-        },
-        customer_email: {
-          type: "string",
-          description: "Optional. If customer didn't give an email, leave blank.",
-        },
-        notes: {
-          type: "string",
-          description: "Brief description of what the customer needs (1 sentence).",
-        },
+        start_time_iso: { type: "string", description: "ISO 8601, copied exactly from check_availability." },
+        customer_name: { type: "string", description: "Customer's first + last name (or first if that's all you have)." },
+        customer_phone: { type: "string", description: "Customer's phone (E.164 format)." },
+        customer_email: { type: "string", description: "Optional. Leave blank if not given." },
+        notes: { type: "string", description: "Brief description of what the customer needs." },
       },
       required: ["start_time_iso", "customer_name", "customer_phone"],
+    },
+  },
+  {
+    name: "reschedule_appointment",
+    description:
+      "Move the customer's EXISTING booking to a new time. Only call this if the system prompt mentions a current booking with a UID. Use the EXACT iso timestamp from a check_availability result for the new slot.",
+    input_schema: {
+      type: "object",
+      properties: {
+        booking_uid: { type: "string", description: "The booking UID from the system prompt's 'Existing booking' section." },
+        new_start_time_iso: { type: "string", description: "ISO 8601 of the new slot, copied exactly from check_availability." },
+        reason: { type: "string", description: "Brief reason customer gave (optional)." },
+      },
+      required: ["booking_uid", "new_start_time_iso"],
+    },
+  },
+  {
+    name: "cancel_appointment",
+    description:
+      "Cancel the customer's EXISTING booking entirely. Only call this if the system prompt mentions a current booking with a UID. Confirm with the customer first before calling.",
+    input_schema: {
+      type: "object",
+      properties: {
+        booking_uid: { type: "string", description: "The booking UID from the system prompt's 'Existing booking' section." },
+        reason: { type: "string", description: "Brief reason customer gave (optional)." },
+      },
+      required: ["booking_uid"],
     },
   },
 ] as const;
@@ -204,9 +244,10 @@ async function generateWithToolsLoop(
   ctx: ReplyContext,
   apiKey: string,
   logger?: PinoLikeLogger,
-): Promise<string> {
+): Promise<{ text: string; bookingState: BookingState }> {
   const systemPrompt = withToolsSystemPrompt(ctx);
   const messages: Array<{ role: "user" | "assistant"; content: string | ContentBlock[] }> = buildMessages(ctx);
+  const bookingState: BookingState = {};
 
   for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
     const res = await fetch(ANTHROPIC_URL, {
@@ -228,21 +269,16 @@ async function generateWithToolsLoop(
 
     const data = (await res.json()) as { content?: ContentBlock[]; stop_reason?: string };
     const content = data.content || [];
-
-    // Look for any tool_use blocks (Claude can request multiple tools per turn,
-    // but we'll handle them sequentially)
     const toolUses = content.filter((c) => c.type === "tool_use");
 
     if (toolUses.length === 0) {
-      // No tools requested — this is the final text response
       const textBlock = content.find((c) => c.type === "text");
-      return textBlock?.text || "";
+      return { text: textBlock?.text || "", bookingState };
     }
 
-    // Execute each tool and assemble the tool_result blocks
     const toolResults: ContentBlock[] = [];
     for (const tu of toolUses) {
-      const result = await executeTool(tu.name || "", (tu.input as Record<string, unknown>) || {}, ctx, logger);
+      const result = await executeTool(tu.name || "", (tu.input as Record<string, unknown>) || {}, ctx, bookingState, logger);
       toolResults.push({
         type: "tool_result",
         tool_use_id: tu.id || "",
@@ -251,41 +287,61 @@ async function generateWithToolsLoop(
       });
     }
 
-    // Append the assistant turn (with the tool_use blocks Claude returned)
-    // and the user turn (with our tool_result blocks). Then loop.
     messages.push({ role: "assistant", content });
     messages.push({ role: "user", content: toolResults });
   }
 
   logger?.warn("AI hit MAX_TOOL_ITERATIONS without producing a final text reply");
-  return "";
+  return { text: "", bookingState };
 }
 
 function withToolsSystemPrompt(ctx: ReplyContext): string {
-  return [
+  const lines = [
     `You are an SMS auto-reply assistant for ${ctx.business.name}, a ${ctx.business.trade} business in ${ctx.business.location}.`,
-    `Your job: handle the conversation end-to-end — qualify the lead, propose 2-3 specific available times, and BOOK the appointment when the customer agrees.`,
+    `Your job: handle the conversation end-to-end — qualify the lead, propose 2-3 specific available times, and BOOK the appointment when the customer agrees. You can also RESCHEDULE or CANCEL existing bookings.`,
     ``,
     `Tools available:`,
     `- check_availability: query the calendar. Always call this BEFORE suggesting specific times. Never make up times.`,
-    `- book_appointment: confirm a slot. The customer's phone is "${ctx.business.callerPhone || "unknown"}".`,
+    `- book_appointment: confirm a NEW slot. Customer's phone is "${ctx.business.callerPhone || "unknown"}". Don't use this if they already have an existing booking — use reschedule_appointment instead.`,
+    `- reschedule_appointment: move the customer's existing booking. Use the booking UID from "Existing booking" below.`,
+    `- cancel_appointment: cancel the customer's existing booking entirely. Confirm before calling.`,
     ``,
+  ];
+
+  if (ctx.existingBooking) {
+    lines.push(
+      `Existing booking for this customer:`,
+      `  UID:       ${ctx.existingBooking.uid}`,
+      `  Scheduled: ${ctx.existingBooking.scheduledAtIso}`,
+      ``,
+      `If the customer wants to reschedule: call check_availability, propose 2-3 new times, then call reschedule_appointment with the UID above + the new ISO timestamp.`,
+      `If the customer wants to cancel: confirm explicitly ("Got it, cancelling your appointment for [date]?"), then call cancel_appointment with the UID.`,
+      `If the customer wants to book ADDITIONAL service (separate appointment): use book_appointment as normal.`,
+      ``,
+    );
+  } else {
+    lines.push(`The customer has no existing booking. Use book_appointment for any new appointment.`, ``);
+  }
+
+  lines.push(
     `Conversation rules:`,
-    `- Each SMS reply must be under 320 characters. Plain text. No markdown. No emoji unless the customer used one.`,
+    `- Each SMS reply under 320 characters. Plain text. No markdown. No emoji unless the customer used one.`,
     `- Ask ONE question per message. Sound like a human.`,
-    `- When the customer expresses need + interest, call check_availability and propose 2-3 options in one message ("Friday at 2pm, Monday at 10am, or Tuesday at 1pm — which works?").`,
-    `- Once they pick a time, ask for their name if you don't have it, then call book_appointment.`,
-    `- After booking succeeds, confirm the appointment in your reply ("Booked you for Friday at 2pm. We'll text a reminder.").`,
-    `- If a tool call errors, recover gracefully — offer to have someone call them back.`,
+    `- When proposing times, give 2-3 specific options in one message ("Friday 2pm, Monday 10am, or Tuesday 1pm — which works?").`,
+    `- After a successful tool call, confirm the action in plain English ("Booked you for Friday at 2pm" / "Rescheduled to Monday 10am" / "Cancelled — let us know if you'd like to rebook").`,
+    `- If a tool errors, recover gracefully — offer to have someone call them back.`,
     ``,
     `End every customer-facing reply with "— ${ctx.business.name}".`,
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
 async function executeTool(
   name: string,
   input: Record<string, unknown>,
   ctx: ReplyContext,
+  bookingState: BookingState,
   logger?: PinoLikeLogger,
 ): Promise<{ text: string; isError?: boolean }> {
   try {
@@ -313,15 +369,53 @@ async function executeTool(
         };
       }
 
-      const result = await createBooking({
-        startIso,
-        customerName,
-        customerEmail,
-        customerPhone,
-        notes,
-      });
+      const result = await createBooking({ startIso, customerName, customerEmail, customerPhone, notes });
+      if (result.bookingUid) {
+        bookingState.newBooking = { uid: result.bookingUid, scheduledAtIso: result.startIso };
+      }
       return {
-        text: `Booking confirmed. Cal.com booking ID: ${result.bookingId}. Confirmed start: ${result.startIso}. Reply to the customer confirming the appointment in plain English.`,
+        text: `Booking confirmed. UID: ${result.bookingUid || result.bookingId}. Confirmed start: ${result.startIso}. Reply to the customer in plain English confirming the appointment.`,
+      };
+    }
+
+    if (name === "reschedule_appointment") {
+      const bookingUid = String(input.booking_uid || ctx.existingBooking?.uid || "").trim();
+      const newStartIso = String(input.new_start_time_iso || "").trim();
+      const reason = String(input.reason || "").trim();
+
+      if (!bookingUid || !newStartIso) {
+        return {
+          text: "Reschedule failed: missing booking_uid or new_start_time_iso. Ask the customer to confirm the new time.",
+          isError: true,
+        };
+      }
+
+      const result = await rescheduleBooking({
+        bookingUid,
+        newStartIso,
+        reason,
+      });
+      bookingState.rescheduled = { uid: result.bookingUid, scheduledAtIso: result.newStartIso };
+      return {
+        text: `Reschedule confirmed. New start: ${result.newStartIso}. Reply to the customer confirming the new time in plain English.`,
+      };
+    }
+
+    if (name === "cancel_appointment") {
+      const bookingUid = String(input.booking_uid || ctx.existingBooking?.uid || "").trim();
+      const reason = String(input.reason || "").trim();
+
+      if (!bookingUid) {
+        return {
+          text: "Cancel failed: no booking_uid available. Tell the customer you don't see an existing booking and ask if they want to make a new one.",
+          isError: true,
+        };
+      }
+
+      await cancelBooking({ bookingUid, reason });
+      bookingState.cancelled = { uid: bookingUid };
+      return {
+        text: `Cancellation confirmed. Reply to the customer in plain English confirming the cancellation and offering to rebook.`,
       };
     }
 

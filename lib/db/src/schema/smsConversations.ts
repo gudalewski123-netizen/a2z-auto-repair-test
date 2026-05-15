@@ -19,6 +19,12 @@ export const smsConversationsTable = pgTable("sms_conversations", {
   aiSummary: text("ai_summary"),
   // If the caller previously submitted the QuoteForm, link the existing leads row.
   leadId: integer("lead_id"),
+  // Phase 2E — current Cal.com booking for this conversation, if any.
+  // Set when AI calls book_appointment; cleared when AI calls cancel_appointment;
+  // updated when AI calls reschedule_appointment. Lets the AI handle reschedule/
+  // cancel requests without a separate "find my appointment" tool call.
+  lastBookingUid: text("last_booking_uid"),
+  lastBookingScheduledAt: timestamp("last_booking_scheduled_at", { withTimezone: true }),
 });
 
 export type SmsConversation = typeof smsConversationsTable.$inferSelect;

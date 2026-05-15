@@ -208,3 +208,93 @@ function synthesizeEmail(phone: string | undefined): string {
   const digits = phone.replace(/\D/g, "");
   return `${digits}@sms.placeholder`;
 }
+
+interface RescheduleParams {
+  /** The Cal.com booking UID (string slug, NOT the numeric ID) */
+  bookingUid: string;
+  /** ISO 8601 datetime — must match a slot returned by listAvailableSlots */
+  newStartIso: string;
+  /** Why it's being rescheduled — Cal.com requires/recommends this */
+  rescheduledByName?: string;
+  reason?: string;
+}
+
+export interface RescheduleResult {
+  bookingUid: string;
+  newStartIso: string;
+}
+
+/**
+ * Reschedule an existing booking to a new time slot.
+ * Throws on any non-2xx response.
+ */
+export async function rescheduleBooking(params: RescheduleParams): Promise<RescheduleResult> {
+  const creds = getCreds();
+  if (!creds) throw new Error("Cal.com not configured");
+
+  const url = `${CAL_API_BASE}/bookings/${encodeURIComponent(params.bookingUid)}/reschedule`;
+
+  const body = {
+    start: params.newStartIso,
+    rescheduledBy: params.rescheduledByName || "sms-ai-bot",
+    reschedulingReason: params.reason || "Customer requested via SMS",
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${creds.apiKey}`,
+      "cal-api-version": CAL_BOOKINGS_VERSION,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error(`Cal.com reschedule API ${res.status}: ${errBody.slice(0, 300)}`);
+  }
+
+  const data = (await res.json()) as { data?: { uid?: string; start?: string } };
+  return {
+    bookingUid: data.data?.uid || params.bookingUid,
+    newStartIso: data.data?.start || params.newStartIso,
+  };
+}
+
+interface CancelParams {
+  bookingUid: string;
+  reason?: string;
+}
+
+/**
+ * Cancel an existing booking. Returns void on success — Cal.com just confirms.
+ * Throws on any non-2xx response.
+ */
+export async function cancelBooking(params: CancelParams): Promise<void> {
+  const creds = getCreds();
+  if (!creds) throw new Error("Cal.com not configured");
+
+  const url = `${CAL_API_BASE}/bookings/${encodeURIComponent(params.bookingUid)}/cancel`;
+
+  const body = {
+    cancellationReason: params.reason || "Customer requested cancellation via SMS",
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${creds.apiKey}`,
+      "cal-api-version": CAL_BOOKINGS_VERSION,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error(`Cal.com cancel API ${res.status}: ${errBody.slice(0, 300)}`);
+  }
+}

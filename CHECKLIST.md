@@ -92,6 +92,24 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] If AI hallucinates times instead of using check_availability, the system prompt may need tightening — file an issue
 - [ ] If Cal.com API errors with 401: API key invalid. With 404: event type ID is wrong. With 422: time slot already booked or outside availability hours.
 
+## Reschedule + cancel via SMS (Phase 2E)
+- [ ] Phase 2D set up (Cal.com + Anthropic env vars present)
+- [ ] `pnpm --filter @workspace/db run push` applied (added `last_booking_uid` + `last_booking_scheduled_at` columns to `sms_conversations`)
+- [ ] **Test reschedule**: from Phase 2D test, after AI books an appointment, text back "actually can we move it to next Friday?"
+  - AI should call `check_availability`, propose 2-3 new times in one SMS
+  - Reply with one of them
+  - AI calls `reschedule_appointment` (using the UID it tracked)
+  - Cal.com booking moves to the new time (verify in Cal.com dashboard)
+  - `sms_conversations.last_booking_scheduled_at` updates to the new time
+- [ ] **Test cancel**: text back "I need to cancel"
+  - AI confirms ("Got it, cancelling your Friday 2pm appointment?")
+  - Reply "yes"
+  - AI calls `cancel_appointment`
+  - Cal.com booking is cancelled (verify in dashboard)
+  - `sms_conversations.last_booking_uid` becomes NULL, `status` becomes "closed"
+- [ ] After cancel, send another text → AI handles it as a fresh conversation (no existing booking in prompt)
+- [ ] Common errors: 404 on reschedule/cancel = booking UID is wrong (the conversation row got out of sync). Look at Render logs for the actual UID being passed.
+
 ## Frontend Deploy
 - [ ] `artifacts/trades-template/vercel.json` `destination` URL updated with the real Render URL
 - [ ] Vercel project created → `outputDirectory: dist/public` confirmed

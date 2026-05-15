@@ -585,3 +585,100 @@ The full prompt is in `withToolsSystemPrompt()`. Key directives:
 ### Cal.com API caveats
 
 The v2 API has had several iterations. The adapter pins versions via the `cal-api-version` header (`2024-09-04` for slots, `2024-08-13` for bookings). When wiring up a real client, verify the response shapes against current Cal.com docs and adjust the adapter if Cal.com has shipped a breaking change.
+
+---
+
+## Phase 2E — Reschedule + cancel via SMS (implemented)
+
+Extends Phase 2D's booking flow. Once the AI books an appointment, that
+appointment's UID and scheduled time are tracked on the conversation
+row (`sms_conversations.last_booking_uid` + `last_booking_scheduled_at`).
+On any subsequent inbound SMS, the system prompt automatically includes
+the existing booking, so when the customer texts "actually I need to
+move that to Wednesday", Claude has everything it needs to reschedule
+without asking the customer to repeat anything.
+
+### New AI tools
+
+- `reschedule_appointment` — moves the existing booking to a new slot.
+  Inputs: `booking_uid`, `new_start_time_iso`, optional `reason`.
+  Calls `POST /v2/bookings/{uid}/reschedule` on Cal.com.
+- `cancel_appointment` — cancels the existing booking entirely.
+  Inputs: `booking_uid`, optional `reason`.
+  Calls `POST /v2/bookings/{uid}/cancel` on Cal.com.
+
+### Schema changes
+
+Two columns added to `sms_conversations`:
+- `last_booking_uid` (text, nullable) — Cal.com UID for the customer's
+  current appointment
+- `last_booking_scheduled_at` (timestamptz, nullable) — when it's scheduled
+
+`pnpm --filter @workspace/db run push` applies the migration.
+
+### Conversation status updates
+
+The route handler now also updates `sms_conversations.status` based on
+what the AI did:
+- AI booked or rescheduled → status = "booked"
+- AI cancelled → status = "closed", booking fields cleared
+
+### System prompt — what we tell Claude
+
+When `existingBooking` is present in the context, the prompt grows a
+new section:
+
+```
+Existing booking for this customer:
+  UID:       cal_abc123
+  Scheduled: 2026-05-15T18:00:00.000Z
+
+If the customer wants to reschedule: call check_availability, propose
+2-3 new times, then call reschedule_appointment with the UID above +
+the new ISO timestamp.
+If the customer wants to cancel: confirm explicitly, then call
+cancel_appointment with the UID.
+If the customer wants to book ADDITIONAL service (separate appointment):
+use book_appointment as normal.
+```
+
+### Side-effect tracking
+
+`generateReply()` now returns an optional `bookingState` describing what
+happened during the AI loop:
+
+```typescript
+interface BookingState {
+  newBooking?:   { uid, scheduledAtIso };
+  rescheduled?:  { uid, scheduledAtIso };
+  cancelled?:    { uid };
+}
+```
+
+The route handler in `routes/sms.ts` reads this and updates the
+conversation row to match. This way the conversation table is always
+in sync with Cal.com without polling.
+
+### What this enables
+
+- Customer: "Actually can we move it to Friday?"
+- AI: calls check_availability → "Got these open: Friday 2pm, Sat 10am, Mon 1pm. Which?"
+- Customer: "Friday 2pm"
+- AI: calls reschedule_appointment → "Moved to Friday at 2pm. — ACME"
+- *(conversation row's `last_booking_scheduled_at` updates)*
+
+OR:
+
+- Customer: "Need to cancel my appointment, something came up"
+- AI: "Got it, cancelling your Wednesday 10am appointment? — ACME"
+- Customer: "Yes"
+- AI: calls cancel_appointment → "Cancelled. Let us know if you'd like to rebook. — ACME"
+- *(conversation row's status changes to "closed", booking fields cleared)*
+
+### Out of scope
+
+- Multi-conversation reschedule (customer texts a different number, asks
+  to move a booking made elsewhere). The AI doesn't have a "find by phone"
+  tool yet — would need either a Cal.com query or our own bookings index.
+- "Bookings" tab in CRM showing all upcoming appointments — Cal.com is
+  the SSoT; a future PR could embed Cal.com's view.

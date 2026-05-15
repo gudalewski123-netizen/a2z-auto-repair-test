@@ -69,7 +69,8 @@ async function handleInboundSms(
   inboundSid: string,
   logger: Request["log"] | undefined,
 ): Promise<void> {
-  // Find or create conversation
+  // Find or create conversation. Select FULL row so we can pass the existing
+  // booking (if any) into the AI context for reschedule/cancel handling.
   const existing = await db
     .select()
     .from(smsConversationsTable)
@@ -81,20 +82,21 @@ async function handleInboundSms(
     )
     .limit(1);
 
-  let convId: number;
+  let conv: typeof smsConversationsTable.$inferSelect;
   if (existing.length > 0) {
-    convId = existing[0].id;
+    conv = existing[0];
     await db
       .update(smsConversationsTable)
       .set({ updatedAt: new Date() })
-      .where(eq(smsConversationsTable.id, convId));
+      .where(eq(smsConversationsTable.id, conv.id));
   } else {
     const [created] = await db
       .insert(smsConversationsTable)
       .values({ callerPhone, twilioNumber, trigger: "inbound_sms" })
-      .returning({ id: smsConversationsTable.id });
-    convId = created.id;
+      .returning();
+    conv = created;
   }
+  const convId = conv.id;
 
   // Persist the inbound message
   await db.insert(smsMessagesTable).values({
@@ -121,6 +123,11 @@ async function handleInboundSms(
   const businessLocation = process.env.BUSINESS_LOCATION || "";
   const businessPhone = process.env.BUSINESS_PHONE || twilioNumber;
 
+  // Phase 2E: pass the existing booking (if any) so AI can reschedule/cancel it
+  const existingBooking = conv.lastBookingUid && conv.lastBookingScheduledAt
+    ? { uid: conv.lastBookingUid, scheduledAtIso: conv.lastBookingScheduledAt.toISOString() }
+    : undefined;
+
   const reply = await generateReply(
     {
       business: {
@@ -128,12 +135,14 @@ async function handleInboundSms(
         trade: businessTrade,
         location: businessLocation,
         phone: businessPhone,
+        callerPhone,
       },
       conversationHistory: recent.map((m) => ({
         direction: m.direction as "inbound" | "outbound",
         body: m.body,
       })),
       latestInbound: messageBody,
+      existingBooking,
     },
     logger,
   );
@@ -149,8 +158,41 @@ async function handleInboundSms(
     status: sendResult.ok ? "sent" : "failed",
   });
 
+  // Phase 2E: persist booking side effects from the AI's tool calls.
+  // newBooking → set the conversation's tracked booking
+  // rescheduled → update scheduled time (uid stays same)
+  // cancelled → clear the tracked booking + mark conversation closed
+  if (reply.bookingState) {
+    const bs = reply.bookingState;
+    const updates: Partial<typeof smsConversationsTable.$inferInsert> = { updatedAt: new Date() };
+    if (bs.newBooking) {
+      updates.lastBookingUid = bs.newBooking.uid;
+      updates.lastBookingScheduledAt = new Date(bs.newBooking.scheduledAtIso);
+      updates.status = "booked";
+    }
+    if (bs.rescheduled) {
+      updates.lastBookingUid = bs.rescheduled.uid;
+      updates.lastBookingScheduledAt = new Date(bs.rescheduled.scheduledAtIso);
+      updates.status = "booked";
+    }
+    if (bs.cancelled) {
+      updates.lastBookingUid = null;
+      updates.lastBookingScheduledAt = null;
+      updates.status = "closed";
+    }
+    await db.update(smsConversationsTable).set(updates).where(eq(smsConversationsTable.id, convId));
+  }
+
   logger?.info(
-    { convId, callerPhone, source: reply.source, sendOk: sendResult.ok },
+    {
+      convId,
+      callerPhone,
+      source: reply.source,
+      sendOk: sendResult.ok,
+      booked: !!reply.bookingState?.newBooking,
+      rescheduled: !!reply.bookingState?.rescheduled,
+      cancelled: !!reply.bookingState?.cancelled,
+    },
     "Inbound SMS handled",
   );
 }
