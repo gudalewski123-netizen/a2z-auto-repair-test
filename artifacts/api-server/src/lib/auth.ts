@@ -75,6 +75,12 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   try {
     const payload = verifyToken(token);
     (req as any).user = payload;
+    // Also populate req.userId for handlers that use the legacy access pattern
+    // (contacts.ts, jobs.ts, activities.ts, followups.ts, dashboard.ts all use
+    // `req.userId!` — they were written against an earlier middleware/auth.ts
+    // that defined the Request.userId field. Without this assignment, those
+    // handlers insert rows with userId=NULL and then can't find them on list).
+    req.userId = payload.userId;
     next();
   } catch {
     res.status(401).json({ error: "Invalid or expired session" });
