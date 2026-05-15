@@ -24,6 +24,7 @@
 // here use that format.
 
 import { listAvailableSlots, createBooking, rescheduleBooking, cancelBooking, isCalConfigured } from "./cal-com";
+import { syncBookingCreated, syncBookingRescheduled, syncBookingCancelled } from "./crm-sync";
 
 interface BusinessContext {
   name: string;
@@ -423,6 +424,20 @@ async function executeTool(
       const result = await createBooking({ startIso, customerName, customerEmail, customerPhone, notes });
       if (result.bookingUid) {
         bookingState.newBooking = { uid: result.bookingUid, scheduledAtIso: result.startIso };
+        // Mirror into CRM so admin can mark complete → trigger review SMS.
+        // Best-effort: failures are logged but don't fail the AI turn (the
+        // Cal.com booking already succeeded — customer gets a confirmation).
+        await syncBookingCreated(
+          {
+            calBookingUid: result.bookingUid,
+            startIso: result.startIso,
+            customerName,
+            customerPhone,
+            serviceType: ctx.business.trade || "Service",
+            notes,
+          },
+          logger,
+        );
       }
       return {
         text: `Booking confirmed. UID: ${result.bookingUid || result.bookingId}. Confirmed start: ${result.startIso}. Reply to the customer in plain English confirming the appointment.`,
@@ -443,6 +458,11 @@ async function executeTool(
 
       const result = await rescheduleBooking({ bookingUid, newStartIso, reason });
       bookingState.rescheduled = { uid: result.bookingUid, scheduledAtIso: result.newStartIso };
+      // Update the CRM job's date too. Best-effort.
+      await syncBookingRescheduled(
+        { calBookingUid: result.bookingUid, newStartIso: result.newStartIso },
+        logger,
+      );
       return {
         text: `Reschedule confirmed. New start: ${result.newStartIso}. Reply to the customer confirming the new time in plain English.`,
       };
@@ -461,6 +481,8 @@ async function executeTool(
 
       await cancelBooking({ bookingUid, reason });
       bookingState.cancelled = { uid: bookingUid };
+      // Remove the CRM job. Best-effort.
+      await syncBookingCancelled({ calBookingUid: bookingUid }, logger);
       return {
         text: `Cancellation confirmed. Reply to the customer in plain English confirming the cancellation and offering to rebook.`,
       };

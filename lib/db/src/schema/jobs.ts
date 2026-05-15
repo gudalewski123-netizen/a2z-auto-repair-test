@@ -12,6 +12,11 @@ export const jobsTable = pgTable("jobs", {
   price: numeric("price", { precision: 10, scale: 2 }).notNull().default("0"),
   date: text("date"),
   notes: text("notes"),
+  // The Cal.com booking UID — populated when this job was created from an AI
+  // SMS booking. Lets us find the right job on reschedule/cancel without
+  // searching by contact + date heuristics. Null for jobs entered by the
+  // admin directly in the CRM (those have no Cal.com counterpart).
+  calBookingUid: text("cal_booking_uid"),
   // Set when an admin marks the job complete (POST /jobs/:id/complete).
   // Triggers the review-request SMS flow (Phase 2C).
   completedAt: timestamp("completed_at", { withTimezone: true }),
