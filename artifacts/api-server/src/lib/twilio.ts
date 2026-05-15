@@ -42,8 +42,21 @@ export interface SendSmsResult {
 }
 
 /**
- * Send an SMS via Twilio. Prefers Messaging Service SID (for A2P 10DLC compliance)
- * over a raw From number when TWILIO_MESSAGING_SERVICE_SID is configured.
+ * Send an SMS via Twilio.
+ *
+ * IMPORTANT: when both From AND MessagingServiceSid are set, Twilio uses From
+ * for routing (which sender number actually delivers) and the Messaging
+ * Service for compliance (A2P 10DLC opt-out, sticky sender, etc.). When only
+ * MessagingServiceSid is set, Twilio picks an arbitrary number from the MS
+ * pool — which can be the wrong one if multiple clients share a pool. So we
+ * ALWAYS pass From when we have it.
+ *
+ * Field precedence:
+ *   1. params.from (explicit caller arg) — used as From
+ *   2. TWILIO_PHONE_NUMBER env (per-client default) — used as From if no arg
+ *   3. TWILIO_MESSAGING_SERVICE_SID (account-level A2P pool) — used as
+ *      MessagingServiceSid for compliance behavior; not as the sender by
+ *      itself unless From is missing entirely
  */
 export async function sendSms(params: SendSmsParams): Promise<SendSmsResult> {
   const creds = getCreds();
@@ -59,10 +72,14 @@ export async function sendSms(params: SendSmsParams): Promise<SendSmsResult> {
   const formData = new URLSearchParams();
   formData.set("To", params.to);
   formData.set("Body", params.body);
+  // Set From whenever we have it — Twilio respects it even when MS SID is
+  // also set. This prevents the MS pool from picking an arbitrary number
+  // (including the same number as To, which fails with error 21266).
+  if (fromNumber) {
+    formData.set("From", fromNumber);
+  }
   if (messagingServiceSid) {
     formData.set("MessagingServiceSid", messagingServiceSid);
-  } else if (fromNumber) {
-    formData.set("From", fromNumber);
   }
 
   const url = `${TWILIO_API_BASE}/Accounts/${creds.accountSid}/Messages.json`;
