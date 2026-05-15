@@ -18,7 +18,12 @@ services:
     region: oregon
     branch: main
     rootDir: .
-    buildCommand: corepack enable && NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @workspace/db run push && pnpm --filter @workspace/api-server run build
+    # NOTE: do NOT prefix with `corepack enable &&` — Render's Node 24 image
+    # ships pnpm pre-installed at /usr/bin/pnpm and the FS is read-only, so
+    # `corepack enable` errors trying to replace the existing symlink (EROFS).
+    # Just call pnpm directly. Verified working against tier2-template-test
+    # deploy on 2026-05-15 (matches thetradestack-api's working config).
+    buildCommand: NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @workspace/db run push && pnpm --filter @workspace/api-server run build
     startCommand: pnpm --filter @workspace/api-server run start
     envVars:
       - key: NODE_ENV
