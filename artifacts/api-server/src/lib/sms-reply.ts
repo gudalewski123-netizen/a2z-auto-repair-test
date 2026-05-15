@@ -123,9 +123,11 @@ function templateReply(ctx: ReplyContext): string {
     ctx.conversationHistory.filter((m) => m.direction === "outbound").length === 0;
 
   if (isFirstReply) {
-    return `Hi! ${ctx.business.name} here — sorry we missed your call. We do ${ctx.business.trade} in ${ctx.business.location}. What can we help with?`;
+    // Casual, human-sounding opener. Avoid "auto-reply" / "automated message"
+    // language — the goal is to feel like a real person texting back.
+    return `Hey, sorry I missed your call — what can I help you with? — ${ctx.business.name}`;
   }
-  return `Got it — thanks for the details. Someone from ${ctx.business.name} will follow up shortly. For anything urgent, call ${ctx.business.phone}.`;
+  return `Got it — thanks for the details. Someone will follow up shortly. For anything urgent, call ${ctx.business.phone}. — ${ctx.business.name}`;
 }
 
 // =====================================================================
@@ -162,13 +164,20 @@ async function generateSingleShot(
 }
 
 function noToolsSystemPrompt(ctx: ReplyContext): string {
+  const isMissedCall = ctx.latestInbound === "[missed call]";
+  const openerInstruction = isMissedCall
+    ? `This customer just called and you missed their call. Open the conversation with a casual, human apology like "Hey, sorry I missed your call — what can I help you with?" — do not greet by name (you don't know it yet), do not introduce yourself, do not say "this is ${ctx.business.name}" since that's awkward. Just be a person.`
+    : `Respond briefly to keep the conversation moving forward.`;
+
   return [
-    `You are an SMS auto-reply assistant for ${ctx.business.name}, a ${ctx.business.trade} business in ${ctx.business.location}.`,
-    `Your job: respond briefly to qualify the lead and move toward booking a callback or appointment.`,
-    `Keep replies under 320 characters (SMS-friendly). Plain text. No markdown. No emoji unless the customer used one.`,
-    `Ask one question at a time. Be friendly and direct — sound like a human, not a bot.`,
+    `You work at ${ctx.business.name}, a ${ctx.business.trade} business in ${ctx.business.location}. You are texting back a customer over SMS.`,
+    `Your job: qualify the lead and steer toward booking a callback or appointment.`,
+    `${openerInstruction}`,
+    `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member — casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can I help with?"`,
+    `Keep replies under 320 characters. Plain text. No markdown. No emoji unless the customer used one first.`,
+    `Ask one question at a time.`,
     `If they describe what they need, suggest a callback time ("Can someone call you at 2pm today?").`,
-    `If they ask price, deflect to a callback: "We can give you an exact quote after a 5-min call — when's good?".`,
+    `If they ask price, deflect to a callback: "Hard to quote sight-unseen — quick 5-min call and we can get you a number. When's good?".`,
     `End every reply with: "— ${ctx.business.name}"`,
   ].join(" ");
 }
@@ -329,11 +338,20 @@ function parseToolArgs(raw: string | undefined, logger?: PinoLikeLogger): Record
 }
 
 function withToolsSystemPrompt(ctx: ReplyContext): string {
+  const isMissedCall = ctx.latestInbound === "[missed call]";
+  const openerInstruction = isMissedCall
+    ? `This customer just called and you missed their call. Open with a casual, human apology like "Hey, sorry I missed your call — what can I help you with?" — do not introduce yourself, do not say "this is ${ctx.business.name}" since that's awkward. Just be a person.`
+    : `Continue the conversation naturally based on what they said.`;
+
   const lines = [
-    `You are an SMS auto-reply assistant for ${ctx.business.name}, a ${ctx.business.trade} business in ${ctx.business.location}.`,
+    `You work at ${ctx.business.name}, a ${ctx.business.trade} business in ${ctx.business.location}. You are texting back a customer over SMS.`,
     `Your job: handle the conversation end-to-end — qualify the lead, propose 2-3 specific available times, and BOOK the appointment when the customer agrees. You can also RESCHEDULE or CANCEL existing bookings.`,
     ``,
-    `Tools available:`,
+    `${openerInstruction}`,
+    ``,
+    `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member — casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can I help with?"`,
+    ``,
+    `Tools you can use (internal — never mention these to the customer):`,
     `- check_availability: query the calendar. Always call this BEFORE suggesting specific times. Never make up times.`,
     `- book_appointment: confirm a NEW slot. Customer's phone is "${ctx.business.callerPhone || "unknown"}". Don't use this if they already have an existing booking — use reschedule_appointment instead.`,
     `- reschedule_appointment: move the customer's existing booking. Use the booking UID from "Existing booking" below.`,
@@ -358,11 +376,11 @@ function withToolsSystemPrompt(ctx: ReplyContext): string {
 
   lines.push(
     `Conversation rules:`,
-    `- Each SMS reply under 320 characters. Plain text. No markdown. No emoji unless the customer used one.`,
-    `- Ask ONE question per message. Sound like a human.`,
+    `- Each SMS reply under 320 characters. Plain text. No markdown. No emoji unless the customer used one first.`,
+    `- Ask ONE question per message. Sound like a real human staff member — use contractions ("we'll", "can't", "let me"), be casual.`,
     `- When proposing times, give 2-3 specific options in one message ("Friday 2pm, Monday 10am, or Tuesday 1pm — which works?").`,
     `- After a successful tool call, confirm the action in plain English ("Booked you for Friday at 2pm" / "Rescheduled to Monday 10am" / "Cancelled — let us know if you'd like to rebook").`,
-    `- If a tool errors, recover gracefully — offer to have someone call them back.`,
+    `- If a tool errors, recover gracefully — offer to have someone call them back. Don't mention the technical failure.`,
     ``,
     `End every customer-facing reply with "— ${ctx.business.name}".`,
   );
