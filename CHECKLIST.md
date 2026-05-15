@@ -39,6 +39,14 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] If switching to client's email, recipient clicked the activation link
 - [ ] Test form submission → email actually lands in inbox (check spam)
 
+## TextFlow SMS auto-response (optional — Phase 2A)
+- [ ] Client signed up for TextFlow account at textflow.tech
+- [ ] Client configured outreach message template in TextFlow dashboard (can use `{business}`, `{trade}`, `{city}`, `{name}` placeholders)
+- [ ] Client copied their unique webhook URL from TextFlow (looks like `https://textflow-website.replit.app/api/public/leads/<api-key>`)
+- [ ] `TEXTFLOW_LEADS_WEBHOOK_URL` env var set on Render with that URL
+- [ ] Test quote form submission → lead appears in TextFlow inbox AND outreach SMS arrives at the test phone within 30s
+- [ ] If TextFlow logs say "outreach: failed, reason: unresolved_placeholders" → client's TextFlow message template references variables we don't send (frontend currently sends `business`, `trade`, `city`, `name`)
+
 ## Frontend Deploy
 - [ ] `artifacts/trades-template/vercel.json` `destination` URL updated with the real Render URL
 - [ ] Vercel project created → `outputDirectory: dist/public` confirmed

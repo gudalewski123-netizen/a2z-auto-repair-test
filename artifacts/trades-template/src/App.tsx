@@ -63,6 +63,10 @@ function QuoteForm() {
     fd.append("Source", BUSINESS.name);
 
     // Save to backend DB first (admin dashboard SSoT), don't block on failure.
+    // Backend will also forward to TextFlow (if TEXTFLOW_LEADS_WEBHOOK_URL is
+    // set on Render) which auto-sends an SMS outreach to the lead. The
+    // business/trade/location fields below are template variables TextFlow's
+    // outreach message can reference as {business} / {trade} / {city}.
     try {
       await fetch("/api/leads", {
         method: "POST",
@@ -73,6 +77,9 @@ function QuoteForm() {
           email: String(fd.get("email") || ""),
           service: String(fd.get("service") || ""),
           message: String(fd.get("message") || ""),
+          business: BUSINESS.name,
+          trade: BUSINESS.trade,
+          city: BUSINESS.location,
         }),
       });
     } catch (err) {
