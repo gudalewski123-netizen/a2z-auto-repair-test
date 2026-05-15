@@ -47,6 +47,19 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] Test quote form submission → lead appears in TextFlow inbox AND outreach SMS arrives at the test phone within 30s
 - [ ] If TextFlow logs say "outreach: failed, reason: unresolved_placeholders" → client's TextFlow message template references variables we don't send (frontend currently sends `business`, `trade`, `city`, `name`)
 
+## Twilio missed-call text-back + AI reply (Phase 2B)
+- [ ] `./scripts/provision-twilio-number.sh <client-slug> <area-code> <render-url>` ran successfully → backup saved to `~/.tier1-config/twilio-numbers/<client-slug>.txt`
+- [ ] Render env vars set: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID`, `PUBLIC_BASE_URL`, `CLIENT_CELL_NUMBER`, `BUSINESS_NAME`, `BUSINESS_TRADE`, `BUSINESS_LOCATION`, `BUSINESS_PHONE`
+- [ ] Optional: `ANTHROPIC_API_KEY` set on Render → SMS replies are AI-generated; without it they're static templates (clearly identifiable in the `source` column of `sms_messages`)
+- [ ] Client dialed their carrier's conditional-forwarding code:
+  - AT&T / T-Mobile / Cricket / Mint: `**61*+1XXXXXXXXXX*11*30#` (replace XXX with the Twilio number digits)
+  - Verizon: `*71 +1XXXXXXXXXX` then call
+- [ ] Test call from a different phone (not the client's cell) to the client's real number → don't answer → SMS arrives at the calling phone within ~30 seconds of giving up
+- [ ] Reply to the SMS → second SMS arrives back from the system (AI or template depending on env)
+- [ ] Check `sms_conversations` and `sms_messages` tables in Neon → conversation row created, both inbound + outbound messages recorded
+- [ ] (Optional sanity) Hit `GET /api/admin/sms/conversations` while logged in as admin → returns the conversation
+- [ ] If first call doesn't trigger missed-call SMS: check Render logs for "Voice missed-call webhook" entries. If absent, Twilio likely couldn't reach the webhook — verify `PUBLIC_BASE_URL` matches the Render URL and the Twilio number's voice URL is `<PUBLIC_BASE_URL>/api/voice/incoming`.
+
 ## Frontend Deploy
 - [ ] `artifacts/trades-template/vercel.json` `destination` URL updated with the real Render URL
 - [ ] Vercel project created → `outputDirectory: dist/public` confirmed

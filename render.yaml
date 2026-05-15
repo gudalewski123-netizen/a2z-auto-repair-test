@@ -42,3 +42,43 @@ services:
       # Leave empty to disable TextFlow integration for this client.
       - key: TEXTFLOW_LEADS_WEBHOOK_URL
         sync: false
+      # ===== Twilio (Phase 2B — missed-call text-back + AI conversation) =====
+      # All four below are required for the missed-call flow to work.
+      # Provision the Twilio number with scripts/provision-twilio-number.sh
+      # which buys a number, attaches it to the Marketing A2P Messaging Service,
+      # and prints the values to paste here.
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER          # E.164, e.g. +17152003545 — the client's dedicated number
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID # MG..., the Marketing A2P Messaging Service
+        sync: false
+      # The business owner's actual cell phone (E.164) — incoming calls forward here.
+      # If empty, all calls go straight to the missed-call SMS flow.
+      - key: CLIENT_CELL_NUMBER
+        sync: false
+      # The full https://...onrender.com URL of THIS service. Used to build
+      # the action URL in the <Dial> TwiML so Twilio knows where to POST after
+      # the dial completes.
+      - key: PUBLIC_BASE_URL
+        sync: false
+      # Used in the missed-call SMS body and the AI system prompt
+      - key: BUSINESS_NAME
+        sync: false
+      - key: BUSINESS_TRADE
+        sync: false
+      - key: BUSINESS_LOCATION
+        sync: false
+      - key: BUSINESS_PHONE
+        sync: false
+      # Optional — when set, missed-call replies are AI-generated via Anthropic
+      # Claude. When unset, replies fall back to a static template.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Optional dev escape hatch — set to "true" to skip Twilio webhook signature
+      # verification (useful when probing locally with ngrok or curl). NEVER set
+      # to true in production.
+      - key: SKIP_TWILIO_SIGNATURE_VERIFY
+        value: "false"
