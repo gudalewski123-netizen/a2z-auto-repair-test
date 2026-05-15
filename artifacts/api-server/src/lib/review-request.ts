@@ -2,7 +2,8 @@
 //
 // Sends a single SMS to the customer asking them to leave a review at
 // REVIEW_REQUEST_URL (typically a Google Business Profile review link).
-// If ANTHROPIC_API_KEY is set, the message is AI-generated for tone variation
+// If DEEPSEEK_API_KEY is set, the message is AI-generated (DeepSeek deepseek-chat)
+// for tone variation
 // (so customers don't get the same canned message every time). Otherwise a
 // friendly static template is used.
 //
@@ -39,20 +40,24 @@ export interface ReviewRequestResult {
   error?: string;
 }
 
-const ANTHROPIC_MODEL = "claude-haiku-4-5";
+const DEFAULT_MODEL = "deepseek-chat";
+
+function getModel(): string {
+  return process.env.DEEPSEEK_MODEL || DEFAULT_MODEL;
+}
 
 /**
- * Build the review-request message body. Tries Anthropic Claude when
- * ANTHROPIC_API_KEY is set; falls back to a static template otherwise.
+ * Build the review-request message body. Tries DeepSeek when
+ * DEEPSEEK_API_KEY is set; falls back to a static template otherwise.
  */
 async function buildMessage(
   params: ReviewRequestParams,
   logger?: PinoLikeLogger,
 ): Promise<{ text: string; source: "ai" | "template" }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (apiKey) {
     try {
-      const text = await buildWithClaude(params, apiKey);
+      const text = await buildWithDeepSeek(params, apiKey);
       if (text && text.trim().length > 0) {
         return { text: text.trim(), source: "ai" };
       }
@@ -75,7 +80,7 @@ function templateMessage(p: ReviewRequestParams): string {
   return `Hi ${firstName(p.customerName)} — thanks for choosing ${p.businessName} for your ${p.serviceType.toLowerCase()}! If you've got 30 seconds, we'd love a quick review: ${p.reviewUrl}`;
 }
 
-async function buildWithClaude(p: ReviewRequestParams, apiKey: string): Promise<string> {
+async function buildWithDeepSeek(p: ReviewRequestParams, apiKey: string): Promise<string> {
   const systemPrompt = [
     `You write SMS messages asking happy customers for a Google review on behalf of ${p.businessName}.`,
     `Output ONLY the message body (no quotes, no preamble, no commentary).`,
@@ -91,27 +96,28 @@ Review URL: ${p.reviewUrl}
 
 Write the message.`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
+      model: getModel(),
       max_tokens: 200,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
     }),
   });
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
-    throw new Error(`Anthropic ${res.status}: ${errBody.slice(0, 200)}`);
+    throw new Error(`DeepSeek ${res.status}: ${errBody.slice(0, 200)}`);
   }
-  const data = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
-  return data.content?.find((c) => c.type === "text")?.text || "";
+  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content || "";
 }
 
 /**

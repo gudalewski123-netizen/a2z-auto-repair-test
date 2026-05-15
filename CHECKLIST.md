@@ -50,7 +50,7 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 ## Twilio missed-call text-back + AI reply (Phase 2B)
 - [ ] `./scripts/provision-twilio-number.sh <client-slug> <area-code> <render-url>` ran successfully → backup saved to `~/.tier1-config/twilio-numbers/<client-slug>.txt`
 - [ ] Render env vars set: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID`, `PUBLIC_BASE_URL`, `CLIENT_CELL_NUMBER`, `BUSINESS_NAME`, `BUSINESS_TRADE`, `BUSINESS_LOCATION`, `BUSINESS_PHONE`
-- [ ] Optional: `ANTHROPIC_API_KEY` set on Render → SMS replies are AI-generated; without it they're static templates (clearly identifiable in the `source` column of `sms_messages`)
+- [ ] Optional: `DEEPSEEK_API_KEY` set on Render → SMS replies are AI-generated; without it they're static templates (clearly identifiable in the `source` column of `sms_messages`)
 - [ ] Client dialed their carrier's conditional-forwarding code:
   - AT&T / T-Mobile / Cricket / Mint: `**61*+1XXXXXXXXXX*11*30#` (replace XXX with the Twilio number digits)
   - Verizon: `*71 +1XXXXXXXXXX` then call
@@ -76,7 +76,7 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] FOLLOW-UP (separate task): add a "Mark Complete" button to the CRM job UI that POSTs the complete endpoint
 
 ## AI books appointments into Cal.com (Phase 2D)
-- [ ] Phase 2B is set up (Twilio + ANTHROPIC_API_KEY for AI replies)
+- [ ] Phase 2B is set up (Twilio + DEEPSEEK_API_KEY for AI replies)
 - [ ] Client signed up at https://cal.com (free tier works)
 - [ ] Client connected their Google/Outlook/iCloud calendar in Cal.com settings
 - [ ] Client created an event type (e.g. "30-min phone consultation") with their availability rules
@@ -93,7 +93,7 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] If Cal.com API errors with 401: API key invalid. With 404: event type ID is wrong. With 422: time slot already booked or outside availability hours.
 
 ## Reschedule + cancel via SMS (Phase 2E)
-- [ ] Phase 2D set up (Cal.com + Anthropic env vars present)
+- [ ] Phase 2D set up (Cal.com + DeepSeek env vars present)
 - [ ] `pnpm --filter @workspace/db run push` applied (added `last_booking_uid` + `last_booking_scheduled_at` columns to `sms_conversations`)
 - [ ] **Test reschedule**: from Phase 2D test, after AI books an appointment, text back "actually can we move it to next Friday?"
   - AI should call `check_availability`, propose 2-3 new times in one SMS

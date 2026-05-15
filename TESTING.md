@@ -28,19 +28,19 @@ A2P registration missing, etc.)
 
 ---
 
-## 2. Anthropic — does the AI key work?
+## 2. DeepSeek — does the AI key work?
 
 ```bash
-./scripts/test-anthropic.sh
+./scripts/test-deepseek.sh
 ```
 
 What it does:
-- Reads `ANTHROPIC_API_KEY` from your `.env` (or pass as `$1`)
-- Sends a tiny test prompt to `claude-haiku-4-5`
+- Reads `DEEPSEEK_API_KEY` from your `.env` (or pass as `$1`)
+- Sends a tiny test prompt to `deepseek-chat`
 - Costs less than $0.001
 
 Pass: prints `Reply: TIER2 SMS BOT OK` and token usage.
-Fail: script prints the Anthropic error type + cause.
+Fail: script prints the DeepSeek error type + cause.
 
 ---
 
@@ -80,7 +80,7 @@ end-to-end test is:
 1. From a phone that's NOT the client's cell, call the client's REAL number
 2. Don't answer — let it ring out (carrier should forward to Twilio after ~30s)
 3. The calling phone receives an SMS within ~30 seconds of the call ending
-4. Reply to the SMS → bot replies (template if no Anthropic, AI if set)
+4. Reply to the SMS → bot replies (template if no DeepSeek key, AI if set)
 
 ### Phase 2C — Review-request SMS on job complete
 1. Log into the CRM as a user
@@ -105,7 +105,7 @@ end-to-end test is:
 - All Twilio webhook errors include `dialStatus` / `From` / `To` in the
   log entry — search for those
 - AI failures fall back to template; if the AI isn't being used, check
-  that `ANTHROPIC_API_KEY` is actually set (it's the most common silent
+  that `DEEPSEEK_API_KEY` is actually set (it's the most common silent
   fallback cause)
 - Cal.com tool errors are caught and the AI recovers gracefully
   ("Let me have someone call you back instead") — check Render logs for
@@ -118,5 +118,5 @@ end-to-end test is:
 - The CRM frontend rendering — you'll know if it's broken by visual inspection
 - Twilio webhook signature verification — the production code does verify;
   bypass via `SKIP_TWILIO_SIGNATURE_VERIFY=true` only during local dev
-- Cost accounting — Twilio + Anthropic + Cal.com all charge per use; nothing
+- Cost accounting — Twilio + DeepSeek + Cal.com all charge per use; nothing
   here surfaces costs back into the dashboard yet

@@ -73,10 +73,15 @@ services:
         sync: false
       - key: BUSINESS_PHONE
         sync: false
-      # Optional — when set, missed-call replies are AI-generated via Anthropic
-      # Claude. When unset, replies fall back to a static template.
-      - key: ANTHROPIC_API_KEY
+      # Optional — when set, missed-call replies are AI-generated via DeepSeek
+      # (model: deepseek-chat). When unset, replies fall back to a static template.
+      # Get the key from https://platform.deepseek.com/api_keys.
+      - key: DEEPSEEK_API_KEY
         sync: false
+      # Optional override (default: deepseek-chat — the cheap/fast alias).
+      # Use deepseek-v4-pro only if you want the reasoning model (~10x cost).
+      - key: DEEPSEEK_MODEL
+        value: deepseek-chat
       # Optional dev escape hatch — set to "true" to skip Twilio webhook signature
       # verification (useful when probing locally with ngrok or curl). NEVER set
       # to true in production.
@@ -92,11 +97,11 @@ services:
       - key: REVIEW_REQUEST_URL
         sync: false
       # ===== Phase 2D — AI books appointments into Cal.com directly =====
-      # When BOTH ANTHROPIC_API_KEY and the two CAL_COM_* vars below are set,
-      # the AI gets `check_availability` and `book_appointment` tools — it can
-      # propose specific times AND confirm the booking via the Cal.com v2 API.
-      # If either is missing, the AI falls back to qualifying + suggesting
-      # a callback (Phase 2B behavior).
+      # When BOTH DEEPSEEK_API_KEY (above) and the two CAL_COM_* vars below
+      # are set, the AI gets `check_availability` and `book_appointment` tools
+      # — it can propose specific times AND confirm the booking via the Cal.com
+      # v2 API. If either is missing, the AI falls back to qualifying +
+      # suggesting a callback (Phase 2B behavior).
       #
       # Setup:
       #   1. Client signs up at cal.com (free tier works)

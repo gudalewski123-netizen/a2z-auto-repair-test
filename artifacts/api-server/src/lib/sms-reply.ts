@@ -1,14 +1,15 @@
 // SMS reply generator. Three execution modes — picks the best available:
 //
 //   1. AI + Cal.com tools (Phase 2D + 2E)
-//      Anthropic Claude Haiku 4.5 with `check_availability`, `book_appointment`,
-//      `reschedule_appointment`, and `cancel_appointment` tools. AI runs a
-//      multi-turn loop, calling tools to manage the customer's booking.
-//      Requires: ANTHROPIC_API_KEY + CAL_COM_API_KEY + CAL_COM_EVENT_TYPE_ID
+//      DeepSeek (deepseek-chat by default) with `check_availability`,
+//      `book_appointment`, `reschedule_appointment`, and `cancel_appointment`
+//      tools. AI runs a multi-turn loop, calling tools to manage the
+//      customer's booking.
+//      Requires: DEEPSEEK_API_KEY + CAL_COM_API_KEY + CAL_COM_EVENT_TYPE_ID
 //
 //   2. AI without tools (Phase 2B)
-//      Same Claude model but no tool access — qualifies the lead and
-//      suggests "we'll call you back". Requires: ANTHROPIC_API_KEY only
+//      Same DeepSeek model but no tool access — qualifies the lead and
+//      suggests "we'll call you back". Requires: DEEPSEEK_API_KEY only
 //
 //   3. Static template (no API keys)
 //      Friendly canned responses. Requires: nothing.
@@ -17,6 +18,10 @@
 // same shape regardless. The `source` field tells you which path ran.
 // `bookingState` captures any Cal.com side effects (booked / rescheduled /
 // cancelled) so the route handler can update the conversation row.
+//
+// DeepSeek's API is OpenAI-compatible (chat/completions endpoint with
+// role-based messages, OpenAI-style tool/function calling). All requests
+// here use that format.
 
 import { listAvailableSlots, createBooking, rescheduleBooking, cancelBooking, isCalConfigured } from "./cal-com";
 
@@ -67,9 +72,13 @@ interface PinoLikeLogger {
   error: (...args: unknown[]) => void;
 }
 
-const ANTHROPIC_MODEL = "claude-haiku-4-5";
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+const DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions";
+const DEFAULT_MODEL = "deepseek-chat"; // alias for the current cheap/fast model
 const MAX_TOOL_ITERATIONS = 5;
+
+function getModel(): string {
+  return process.env.DEEPSEEK_MODEL || DEFAULT_MODEL;
+}
 
 // =====================================================================
 //  Public entry point
@@ -79,7 +88,7 @@ export async function generateReply(
   ctx: ReplyContext,
   logger?: PinoLikeLogger,
 ): Promise<ReplyResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (apiKey) {
     const useTools = isCalConfigured();
     try {
@@ -128,27 +137,28 @@ async function generateSingleShot(
   apiKey: string,
   logger?: PinoLikeLogger,
 ): Promise<string> {
-  const systemPrompt = noToolsSystemPrompt(ctx);
-  const messages = buildMessages(ctx);
+  const messages: OpenAIMessage[] = [
+    { role: "system", content: noToolsSystemPrompt(ctx) },
+    ...buildConvoMessages(ctx),
+  ];
 
-  const res = await fetch(ANTHROPIC_URL, {
+  const res = await fetch(DEEPSEEK_URL, {
     method: "POST",
-    headers: anthropicHeaders(apiKey),
+    headers: deepseekHeaders(apiKey),
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
+      model: getModel(),
       max_tokens: 300,
-      system: systemPrompt,
       messages,
     }),
   });
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => "");
-    throw new Error(`Anthropic API ${res.status}: ${errBody.slice(0, 200)}`);
+    throw new Error(`DeepSeek API ${res.status}: ${errBody.slice(0, 200)}`);
   }
 
-  const data = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
-  return data.content?.find((c) => c.type === "text")?.text || "";
+  const data = (await res.json()) as DeepSeekResponse;
+  return data.choices?.[0]?.message?.content || "";
 }
 
 function noToolsSystemPrompt(ctx: ReplyContext): string {
@@ -167,132 +177,155 @@ function noToolsSystemPrompt(ctx: ReplyContext): string {
 //  Mode 1: AI with Cal.com booking tools (Phase 2D + 2E)
 // =====================================================================
 
-interface ContentBlock {
-  type: string;
-  text?: string;
-  // tool_use blocks
-  id?: string;
-  name?: string;
-  input?: Record<string, unknown>;
-  // tool_result blocks
-  tool_use_id?: string;
-  content?: string | Array<{ type: string; text?: string }>;
-  is_error?: boolean;
-}
-
+// OpenAI-style function tool definitions (DeepSeek uses this exact format).
 const TOOLS = [
   {
-    name: "check_availability",
-    description:
-      "Check available appointment slots in the next N days. Returns up to 10 slots with friendly labels and ISO timestamps. Call this BEFORE proposing specific times to the customer — never make up slot times.",
-    input_schema: {
-      type: "object",
-      properties: {
-        days_ahead: {
-          type: "number",
-          description: "How many days ahead to look (1-14). Default 7.",
+    type: "function" as const,
+    function: {
+      name: "check_availability",
+      description:
+        "Check available appointment slots in the next N days. Returns up to 10 slots with friendly labels and ISO timestamps. Call this BEFORE proposing specific times to the customer — never make up slot times.",
+      parameters: {
+        type: "object",
+        properties: {
+          days_ahead: {
+            type: "number",
+            description: "How many days ahead to look (1-14). Default 7.",
+          },
         },
       },
     },
   },
   {
-    name: "book_appointment",
-    description:
-      "Book a NEW appointment for the customer. Use the EXACT iso timestamp from a check_availability result — do not modify or round it. Don't call this if the customer already has an existing booking — use reschedule_appointment instead.",
-    input_schema: {
-      type: "object",
-      properties: {
-        start_time_iso: { type: "string", description: "ISO 8601, copied exactly from check_availability." },
-        customer_name: { type: "string", description: "Customer's first + last name (or first if that's all you have)." },
-        customer_phone: { type: "string", description: "Customer's phone (E.164 format)." },
-        customer_email: { type: "string", description: "Optional. Leave blank if not given." },
-        notes: { type: "string", description: "Brief description of what the customer needs." },
+    type: "function" as const,
+    function: {
+      name: "book_appointment",
+      description:
+        "Book a NEW appointment for the customer. Use the EXACT iso timestamp from a check_availability result — do not modify or round it. Don't call this if the customer already has an existing booking — use reschedule_appointment instead.",
+      parameters: {
+        type: "object",
+        properties: {
+          start_time_iso: { type: "string", description: "ISO 8601, copied exactly from check_availability." },
+          customer_name: { type: "string", description: "Customer's first + last name (or first if that's all you have)." },
+          customer_phone: { type: "string", description: "Customer's phone (E.164 format)." },
+          customer_email: { type: "string", description: "Optional. Leave blank if not given." },
+          notes: { type: "string", description: "Brief description of what the customer needs." },
+        },
+        required: ["start_time_iso", "customer_name", "customer_phone"],
       },
-      required: ["start_time_iso", "customer_name", "customer_phone"],
     },
   },
   {
-    name: "reschedule_appointment",
-    description:
-      "Move the customer's EXISTING booking to a new time. Only call this if the system prompt mentions a current booking with a UID. Use the EXACT iso timestamp from a check_availability result for the new slot.",
-    input_schema: {
-      type: "object",
-      properties: {
-        booking_uid: { type: "string", description: "The booking UID from the system prompt's 'Existing booking' section." },
-        new_start_time_iso: { type: "string", description: "ISO 8601 of the new slot, copied exactly from check_availability." },
-        reason: { type: "string", description: "Brief reason customer gave (optional)." },
+    type: "function" as const,
+    function: {
+      name: "reschedule_appointment",
+      description:
+        "Move the customer's EXISTING booking to a new time. Only call this if the system prompt mentions a current booking with a UID. Use the EXACT iso timestamp from a check_availability result for the new slot.",
+      parameters: {
+        type: "object",
+        properties: {
+          booking_uid: { type: "string", description: "The booking UID from the system prompt's 'Existing booking' section." },
+          new_start_time_iso: { type: "string", description: "ISO 8601 of the new slot, copied exactly from check_availability." },
+          reason: { type: "string", description: "Brief reason customer gave (optional)." },
+        },
+        required: ["booking_uid", "new_start_time_iso"],
       },
-      required: ["booking_uid", "new_start_time_iso"],
     },
   },
   {
-    name: "cancel_appointment",
-    description:
-      "Cancel the customer's EXISTING booking entirely. Only call this if the system prompt mentions a current booking with a UID. Confirm with the customer first before calling.",
-    input_schema: {
-      type: "object",
-      properties: {
-        booking_uid: { type: "string", description: "The booking UID from the system prompt's 'Existing booking' section." },
-        reason: { type: "string", description: "Brief reason customer gave (optional)." },
+    type: "function" as const,
+    function: {
+      name: "cancel_appointment",
+      description:
+        "Cancel the customer's EXISTING booking entirely. Only call this if the system prompt mentions a current booking with a UID. Confirm with the customer first before calling.",
+      parameters: {
+        type: "object",
+        properties: {
+          booking_uid: { type: "string", description: "The booking UID from the system prompt's 'Existing booking' section." },
+          reason: { type: "string", description: "Brief reason customer gave (optional)." },
+        },
+        required: ["booking_uid"],
       },
-      required: ["booking_uid"],
     },
   },
-] as const;
+];
 
 async function generateWithToolsLoop(
   ctx: ReplyContext,
   apiKey: string,
   logger?: PinoLikeLogger,
 ): Promise<{ text: string; bookingState: BookingState }> {
-  const systemPrompt = withToolsSystemPrompt(ctx);
-  const messages: Array<{ role: "user" | "assistant"; content: string | ContentBlock[] }> = buildMessages(ctx);
+  const messages: OpenAIMessage[] = [
+    { role: "system", content: withToolsSystemPrompt(ctx) },
+    ...buildConvoMessages(ctx),
+  ];
   const bookingState: BookingState = {};
 
   for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
-    const res = await fetch(ANTHROPIC_URL, {
+    const res = await fetch(DEEPSEEK_URL, {
       method: "POST",
-      headers: anthropicHeaders(apiKey),
+      headers: deepseekHeaders(apiKey),
       body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
+        model: getModel(),
         max_tokens: 600,
-        system: systemPrompt,
         tools: TOOLS,
+        tool_choice: "auto",
         messages,
       }),
     });
 
     if (!res.ok) {
       const errBody = await res.text().catch(() => "");
-      throw new Error(`Anthropic API ${res.status}: ${errBody.slice(0, 200)}`);
+      throw new Error(`DeepSeek API ${res.status}: ${errBody.slice(0, 200)}`);
     }
 
-    const data = (await res.json()) as { content?: ContentBlock[]; stop_reason?: string };
-    const content = data.content || [];
-    const toolUses = content.filter((c) => c.type === "tool_use");
-
-    if (toolUses.length === 0) {
-      const textBlock = content.find((c) => c.type === "text");
-      return { text: textBlock?.text || "", bookingState };
+    const data = (await res.json()) as DeepSeekResponse;
+    const choice = data.choices?.[0];
+    if (!choice) {
+      logger?.warn({ data: JSON.stringify(data).slice(0, 200) }, "DeepSeek returned no choices");
+      return { text: "", bookingState };
     }
 
-    const toolResults: ContentBlock[] = [];
-    for (const tu of toolUses) {
-      const result = await executeTool(tu.name || "", (tu.input as Record<string, unknown>) || {}, ctx, bookingState, logger);
-      toolResults.push({
-        type: "tool_result",
-        tool_use_id: tu.id || "",
+    const message = choice.message;
+    const toolCalls = message.tool_calls || [];
+
+    if (toolCalls.length === 0) {
+      // No tool calls — final text reply
+      return { text: message.content || "", bookingState };
+    }
+
+    // Append the assistant's tool-call message FIRST (OpenAI requires this
+    // exact ordering before any tool result messages).
+    messages.push({
+      role: "assistant",
+      content: message.content || null,
+      tool_calls: toolCalls,
+    });
+
+    // Execute each tool and append a tool message per call
+    for (const tc of toolCalls) {
+      const args = parseToolArgs(tc.function?.arguments, logger);
+      const result = await executeTool(tc.function?.name || "", args, ctx, bookingState, logger);
+      messages.push({
+        role: "tool",
+        tool_call_id: tc.id,
         content: result.text,
-        is_error: result.isError || undefined,
       });
     }
-
-    messages.push({ role: "assistant", content });
-    messages.push({ role: "user", content: toolResults });
   }
 
   logger?.warn("AI hit MAX_TOOL_ITERATIONS without producing a final text reply");
   return { text: "", bookingState };
+}
+
+function parseToolArgs(raw: string | undefined, logger?: PinoLikeLogger): Record<string, unknown> {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    logger?.warn({ raw: raw.slice(0, 200) }, "Tool arguments not valid JSON");
+    return {};
+  }
 }
 
 function withToolsSystemPrompt(ctx: ReplyContext): string {
@@ -390,11 +423,7 @@ async function executeTool(
         };
       }
 
-      const result = await rescheduleBooking({
-        bookingUid,
-        newStartIso,
-        reason,
-      });
+      const result = await rescheduleBooking({ bookingUid, newStartIso, reason });
       bookingState.rescheduled = { uid: result.bookingUid, scheduledAtIso: result.newStartIso };
       return {
         text: `Reschedule confirmed. New start: ${result.newStartIso}. Reply to the customer confirming the new time in plain English.`,
@@ -428,19 +457,46 @@ async function executeTool(
 }
 
 // =====================================================================
-//  Helpers
+//  Helpers + types
 // =====================================================================
 
-function anthropicHeaders(apiKey: string): Record<string, string> {
+function deepseekHeaders(apiKey: string): Record<string, string> {
   return {
-    "x-api-key": apiKey,
-    "anthropic-version": "2023-06-01",
+    Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
   };
 }
 
-function buildMessages(ctx: ReplyContext): Array<{ role: "user" | "assistant"; content: string | ContentBlock[] }> {
-  const messages = ctx.conversationHistory.slice(-8).map((m) => ({
+interface OpenAIToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string; // JSON-encoded string per OpenAI spec
+  };
+}
+
+interface OpenAIMessage {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | null;
+  tool_call_id?: string;
+  tool_calls?: OpenAIToolCall[];
+}
+
+interface DeepSeekResponse {
+  choices?: Array<{
+    message: {
+      role: string;
+      content: string | null;
+      tool_calls?: OpenAIToolCall[];
+    };
+    finish_reason?: string;
+  }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+}
+
+function buildConvoMessages(ctx: ReplyContext): OpenAIMessage[] {
+  const messages: OpenAIMessage[] = ctx.conversationHistory.slice(-8).map((m) => ({
     role: m.direction === "inbound" ? ("user" as const) : ("assistant" as const),
     content: m.body,
   }));
