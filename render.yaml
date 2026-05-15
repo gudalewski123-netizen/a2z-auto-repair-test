@@ -35,3 +35,10 @@ services:
         generateValue: true
       - key: LEAD_NOTIFY_TO
         value: teddy.nk28@gmail.com
+      # TextFlow lead-forwarding webhook (per-client). When set, every QuoteForm
+      # submission is also POSTed here so TextFlow auto-sends an SMS outreach
+      # to the lead. Get this URL from the client's TextFlow account dashboard;
+      # it has the shape https://textflow-website.replit.app/api/public/leads/<key>.
+      # Leave empty to disable TextFlow integration for this client.
+      - key: TEXTFLOW_LEADS_WEBHOOK_URL
+        sync: false

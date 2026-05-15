@@ -309,3 +309,62 @@ These are queued behind TextFlow API integration. They will land as a separate P
 - Automated review-request SMS (fires when a job is marked complete in the CRM)
 
 When TextFlow API details land, the integration should live in `artifacts/api-server/src/lib/textflow.ts` and be triggered from the relevant route handlers. Don't sprinkle SMS calls across the codebase — keep them in one module.
+
+---
+
+## TextFlow lead auto-response (Phase 2A — implemented)
+
+When a customer fills out the QuoteForm, three things happen in parallel:
+
+1. **POST to `/api/leads`** (our backend) — saves to DB so the admin dashboard sees it
+2. **POST to FormSubmit** (HTTPS) — emails the configured recipient
+3. **Backend then fire-and-forget POSTs to TextFlow** — TextFlow's auto-outreach SMS goes out
+
+Step 3 only runs if `TEXTFLOW_LEADS_WEBHOOK_URL` env var is set on the
+Render service. It's per-client because each client has their own TextFlow
+account (and thus their own message template + Twilio number).
+
+### How it's wired
+
+- Adapter: `artifacts/api-server/src/lib/textflow.ts` — wraps the TextFlow
+  POST with a 5s timeout, structured logging, and graceful failure (never
+  rejects to the caller).
+- Route: `artifacts/api-server/src/routes/leads.ts` — calls
+  `forwardLeadToTextFlow()` after the DB save, fire-and-forget.
+- Frontend: `App.tsx` QuoteForm now sends `business`, `trade`, `city`
+  alongside the standard form fields, so TextFlow's message template can
+  reference them as `{business}` / `{trade}` / `{city}`.
+
+### Setup per client
+
+1. Client signs up for TextFlow at https://textflow.tech
+2. In TextFlow dashboard → set their outreach message template
+   (e.g. *"Hi {name}, thanks for reaching out to {business}! We do {trade}
+   in {city}. When's a good time to call?"*)
+3. Client copies their unique webhook URL from the dashboard. It looks like
+   `https://textflow-website.replit.app/api/public/leads/<api-key>`
+4. Paste that URL into `TEXTFLOW_LEADS_WEBHOOK_URL` on the client's Render
+   service (Render → Environment → add var)
+5. Test: submit a QuoteForm on the live site → check TextFlow's inbox AND
+   the test phone receives the SMS within ~30s
+
+### Failure modes
+
+- `TEXTFLOW_LEADS_WEBHOOK_URL` not set → skipped silently (intended; client
+  hasn't configured TextFlow yet). Lead still saved to DB, FormSubmit still
+  emails the recipient.
+- TextFlow returns `outreach: failed, reason: unresolved_placeholders` →
+  client's TextFlow message template references variables we don't send.
+  Currently we send `name`, `phone`, `email`, `message`, `business`, `trade`,
+  `city`. Anything else needs to be added in `routes/leads.ts`.
+- TextFlow times out (>5s) → logged as warning, no impact on user-facing
+  form submission.
+
+### Out of scope for Phase 2A (queued for 2B / 2C)
+
+- Missed-call text-back (per-client Twilio number provisioning + voice webhook)
+- Automated review-request SMS (fires on CRM job-complete)
+- AI conversation handler for incoming SMS replies
+
+Those need direct Twilio (not TextFlow) since TextFlow's public API only
+exposes the lead-forwarding endpoint.
