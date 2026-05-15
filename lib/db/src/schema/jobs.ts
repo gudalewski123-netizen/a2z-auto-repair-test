@@ -12,6 +12,12 @@ export const jobsTable = pgTable("jobs", {
   price: numeric("price", { precision: 10, scale: 2 }).notNull().default("0"),
   date: text("date"),
   notes: text("notes"),
+  // Set when an admin marks the job complete (POST /jobs/:id/complete).
+  // Triggers the review-request SMS flow (Phase 2C).
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  // Set when the review-request SMS has been sent so we don't duplicate.
+  // Cleared by POST /jobs/:id/resend-review-request if admin needs to retry.
+  reviewRequestSentAt: timestamp("review_request_sent_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

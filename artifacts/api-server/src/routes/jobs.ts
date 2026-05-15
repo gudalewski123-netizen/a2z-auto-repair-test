@@ -11,6 +11,7 @@ import {
   UpdateJobResponse,
   DeleteJobParams,
 } from "@workspace/api-zod";
+import { sendReviewRequest } from "../lib/review-request";
 
 const router: IRouter = Router();
 
@@ -124,6 +125,161 @@ router.patch("/contacts/:contactId/jobs/:id", async (req, res): Promise<void> =>
 
   await recalcRevenue(params.data.contactId, req.userId!);
   res.json(UpdateJobResponse.parse({ ...job, price: Number(job.price) }));
+});
+
+// POST /api/contacts/:contactId/jobs/:id/complete
+//
+// Marks a job complete and (Phase 2C) fires off a review-request SMS to the
+// customer. Idempotent on completedAt — calling twice doesn't change the
+// timestamp. Idempotent on review-request — the second call returns
+// reason: "already_sent" and does NOT double-send the SMS.
+//
+// Body (all optional):
+//   { sendReviewRequest: false }  to mark complete WITHOUT texting
+router.post("/contacts/:contactId/jobs/:id/complete", async (req, res): Promise<void> => {
+  const params = UpdateJobParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const shouldSend = req.body?.sendReviewRequest !== false; // default true
+
+  const [row] = await db
+    .select({ job: jobsTable, contact: contactsTable })
+    .from(jobsTable)
+    .innerJoin(contactsTable, eq(contactsTable.id, jobsTable.contactId))
+    .where(
+      and(
+        eq(jobsTable.id, params.data.id),
+        eq(jobsTable.contactId, params.data.contactId),
+        eq(jobsTable.userId, req.userId!),
+      ),
+    );
+
+  if (!row) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+
+  const wasAlreadyComplete = row.job.completedAt != null;
+  if (!wasAlreadyComplete) {
+    await db.update(jobsTable).set({ completedAt: new Date() }).where(eq(jobsTable.id, row.job.id));
+    await db.insert(activitiesTable).values({
+      userId: req.userId!,
+      contactId: row.job.contactId,
+      action: "job_completed",
+      details: `Job marked complete: ${row.job.serviceType}`,
+    });
+  }
+
+  const completedAtIso =
+    (row.job.completedAt ?? new Date()).toISOString();
+
+  if (!shouldSend) {
+    res.json({ ok: true, completedAt: completedAtIso, reviewRequestSent: false, reason: "skipped_by_caller" });
+    return;
+  }
+
+  if (row.job.reviewRequestSentAt != null) {
+    res.json({
+      ok: true,
+      completedAt: completedAtIso,
+      reviewRequestSent: false,
+      reason: "already_sent",
+      sentAt: row.job.reviewRequestSentAt.toISOString(),
+    });
+    return;
+  }
+
+  const result = await sendReviewRequest(
+    {
+      customerName: row.contact.name,
+      customerPhone: row.contact.phone,
+      serviceType: row.job.serviceType,
+      twilioNumber: process.env.TWILIO_PHONE_NUMBER || "",
+      businessName: process.env.BUSINESS_NAME || "us",
+      reviewUrl: process.env.REVIEW_REQUEST_URL || "",
+    },
+    req.log,
+  );
+
+  if (!result.ok) {
+    req.log?.warn({ jobId: row.job.id, err: result.error }, "Review-request SMS send failed");
+    res.json({
+      ok: true,
+      completedAt: completedAtIso,
+      reviewRequestSent: false,
+      reason: result.error || "send_failed",
+      conversationId: result.conversationId,
+    });
+    return;
+  }
+
+  await db.update(jobsTable).set({ reviewRequestSentAt: new Date() }).where(eq(jobsTable.id, row.job.id));
+
+  res.json({
+    ok: true,
+    completedAt: completedAtIso,
+    reviewRequestSent: true,
+    source: result.source,
+    conversationId: result.conversationId,
+    messageId: result.messageId,
+  });
+});
+
+// POST /api/contacts/:contactId/jobs/:id/resend-review-request
+// Force a fresh review-request even if one was already sent. Useful when the
+// initial send failed delivery or the admin wants to nudge again.
+router.post("/contacts/:contactId/jobs/:id/resend-review-request", async (req, res): Promise<void> => {
+  const params = UpdateJobParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [row] = await db
+    .select({ job: jobsTable, contact: contactsTable })
+    .from(jobsTable)
+    .innerJoin(contactsTable, eq(contactsTable.id, jobsTable.contactId))
+    .where(
+      and(
+        eq(jobsTable.id, params.data.id),
+        eq(jobsTable.contactId, params.data.contactId),
+        eq(jobsTable.userId, req.userId!),
+      ),
+    );
+
+  if (!row) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+
+  const result = await sendReviewRequest(
+    {
+      customerName: row.contact.name,
+      customerPhone: row.contact.phone,
+      serviceType: row.job.serviceType,
+      twilioNumber: process.env.TWILIO_PHONE_NUMBER || "",
+      businessName: process.env.BUSINESS_NAME || "us",
+      reviewUrl: process.env.REVIEW_REQUEST_URL || "",
+    },
+    req.log,
+  );
+
+  if (!result.ok) {
+    res.status(502).json({ ok: false, error: result.error, conversationId: result.conversationId });
+    return;
+  }
+
+  await db.update(jobsTable).set({ reviewRequestSentAt: new Date() }).where(eq(jobsTable.id, row.job.id));
+
+  res.json({
+    ok: true,
+    reviewRequestSent: true,
+    source: result.source,
+    conversationId: result.conversationId,
+    messageId: result.messageId,
+  });
 });
 
 router.delete("/contacts/:contactId/jobs/:id", async (req, res): Promise<void> => {

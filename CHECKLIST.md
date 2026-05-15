@@ -60,6 +60,38 @@ Tick boxes as you go. Don't ship to production with any unchecked.
 - [ ] (Optional sanity) Hit `GET /api/admin/sms/conversations` while logged in as admin → returns the conversation
 - [ ] If first call doesn't trigger missed-call SMS: check Render logs for "Voice missed-call webhook" entries. If absent, Twilio likely couldn't reach the webhook — verify `PUBLIC_BASE_URL` matches the Render URL and the Twilio number's voice URL is `<PUBLIC_BASE_URL>/api/voice/incoming`.
 
+## Review-request SMS on job complete (Phase 2C)
+- [ ] Phase 2B is set up (Twilio number + auth env vars present)
+- [ ] `REVIEW_REQUEST_URL` env var set on Render — typically the client's Google Business Profile review link (generate one at https://supple.com.au/tools/google-review-link-generator/ or via the GBP dashboard)
+- [ ] `pnpm --filter @workspace/db run push` ran (added `completed_at` + `review_request_sent_at` columns to `jobs` table)
+- [ ] Test via curl (logged in as a CRM user, `token` cookie set):
+  ```
+  curl -X POST https://<render-url>/api/contacts/<contactId>/jobs/<jobId>/complete \
+    -H "Cookie: token=<jwt>" -H "Content-Type: application/json" -d '{}'
+  ```
+  Expected: `{ ok: true, reviewRequestSent: true, source: "ai"|"template", conversationId, messageId }`. Customer phone receives the SMS within ~30s.
+- [ ] Idempotency check: call /complete a second time → response says `reviewRequestSent: false, reason: "already_sent"` — no duplicate SMS
+- [ ] Resend works: `POST /jobs/:id/resend-review-request` → forces a new send even after the first one
+- [ ] Conversation appears in `sms_conversations`; outbound message in `sms_messages` with `source` = "ai" or "template"
+- [ ] FOLLOW-UP (separate task): add a "Mark Complete" button to the CRM job UI that POSTs the complete endpoint
+
+## AI books appointments into Cal.com (Phase 2D)
+- [ ] Phase 2B is set up (Twilio + ANTHROPIC_API_KEY for AI replies)
+- [ ] Client signed up at https://cal.com (free tier works)
+- [ ] Client connected their Google/Outlook/iCloud calendar in Cal.com settings
+- [ ] Client created an event type (e.g. "30-min phone consultation") with their availability rules
+- [ ] Cal.com → Settings → Developer → API keys → generate a key (`cal_live_...`)
+- [ ] Find the event type's numeric ID — when editing the event type in Cal.com, the URL has `?id=12345` — that's the ID
+- [ ] Render env vars set:
+  - `CAL_COM_API_KEY` — the cal_live_... key
+  - `CAL_COM_EVENT_TYPE_ID` — the numeric event type ID
+- [ ] Test: from a phone, text the client's Twilio number something like "Hey, I need a roof inspection — when can someone come look at it?"
+- [ ] AI should reply asking what kind of project, then propose 2-3 specific times pulled from Cal.com
+- [ ] Reply with a time → AI should book it via Cal.com API and confirm in the SMS
+- [ ] Verify in Cal.com dashboard → the booking appears with attendee info from the SMS conversation
+- [ ] If AI hallucinates times instead of using check_availability, the system prompt may need tightening — file an issue
+- [ ] If Cal.com API errors with 401: API key invalid. With 404: event type ID is wrong. With 422: time slot already booked or outside availability hours.
+
 ## Frontend Deploy
 - [ ] `artifacts/trades-template/vercel.json` `destination` URL updated with the real Render URL
 - [ ] Vercel project created → `outputDirectory: dist/public` confirmed

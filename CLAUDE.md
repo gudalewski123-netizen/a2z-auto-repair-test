@@ -450,3 +450,138 @@ If `ANTHROPIC_API_KEY` is unset, the system uses these templates:
 - **Phase 2C**: Automated review-request SMS (fires when CRM marks a job complete)
 - **Phase 2D**: AI books directly into Cal.com via Cal.com API (currently AI just qualifies + suggests "we'll call you back")
 - **CRM SMS tab UI**: backend admin endpoints exist (`/api/admin/sms/conversations*`); a React page in `artifacts/crm/src/pages/sms-conversations.tsx` would surface them in the dashboard.
+
+---
+
+## Phase 2C — Review-request SMS on job completion (implemented)
+
+When an admin marks a job complete in the CRM, an SMS goes out to that
+customer asking them to leave a review. Each job is gated by a
+`reviewRequestSentAt` timestamp so we don't double-send if "Mark Complete"
+gets clicked twice. Admin can manually trigger another via the resend
+endpoint if delivery failed.
+
+### Architecture
+
+```
+Admin clicks "Mark Complete" on a job in the CRM
+  ↓
+POST /api/contacts/:contactId/jobs/:id/complete
+  ↓
+1. Sets jobs.completedAt = now (if not already set)
+2. Inserts an "activity" row ("Job marked complete: <service>")
+3. Loads the contact's name + phone
+4. Calls sendReviewRequest():
+     - Builds message body (AI if ANTHROPIC_API_KEY set, else template)
+     - Finds/creates the SMS conversation keyed by (customerPhone, twilioNumber)
+       — same conversation table used by the missed-call flow, so the admin
+       sees full SMS history per customer
+     - Calls sendSms() via the Twilio adapter
+     - Records the outbound message into sms_messages
+5. On success: sets jobs.reviewRequestSentAt = now
+6. On failure: leaves reviewRequestSentAt null so admin can resend
+```
+
+### New env vars (all in render.yaml)
+
+- `REVIEW_REQUEST_URL` — the URL the SMS embeds. Typically the client's
+  Google Business Profile review link. Generate one at
+  https://supple.com.au/tools/google-review-link-generator/ or via the
+  Google Business Profile dashboard. Leave empty to disable the feature
+  for this client.
+
+### New endpoints
+
+- `POST /api/contacts/:contactId/jobs/:id/complete` — body optional
+  `{ sendReviewRequest: false }` to mark complete WITHOUT texting
+- `POST /api/contacts/:contactId/jobs/:id/resend-review-request` — force
+  a fresh send even if one was already sent
+
+### Schema changes
+
+`jobs` table gains two nullable timestamps:
+- `completed_at` — when the job was marked complete
+- `review_request_sent_at` — when the review SMS was successfully sent
+
+Run `pnpm --filter @workspace/db run push` to apply.
+
+### Message content
+
+**Template (no Anthropic key):**
+> *"Hi Mike — thanks for choosing ACME Roofing for your roof inspection! If you've got 30 seconds, we'd love a quick review: https://g.page/r/...XXX"*
+
+**AI (claude-haiku-4-5):**
+A reworded variant per send. Constrained to under 200 chars, plain text,
+no emoji, includes the review URL, greets by first name, mentions the
+service. Tone varies between sends so customers don't get the same
+message every time.
+
+### What's NOT in this PR
+
+- **CRM frontend "Mark Complete" button** — backend endpoints are ready;
+  the CRM UI in `artifacts/crm/src/pages/contact-detail.tsx` (or wherever
+  jobs render) still needs a button that POSTs to the new endpoint. ~30
+  min follow-up.
+- Phase 2D (AI books into Cal.com) is still queued separately.
+
+---
+
+## Phase 2D — AI books appointments into Cal.com (implemented)
+
+The most powerful Phase 2 feature. When the AI is configured WITH Cal.com
+credentials, it gets two tools (`check_availability`, `book_appointment`)
+and can run an end-to-end booking conversation via SMS — qualify the lead,
+propose specific available times pulled from the client's actual calendar,
+and confirm the booking via the Cal.com v2 API. Without Cal.com creds,
+the AI falls back to qualifying + suggesting "we'll call you back"
+(Phase 2B behavior).
+
+### Three execution modes
+
+`generateReply()` in `lib/sms-reply.ts` picks the highest-capability mode
+that has all the env vars it needs:
+
+| Mode | Requires | Behavior |
+|---|---|---|
+| **Tool-use AI** (Phase 2D) | `ANTHROPIC_API_KEY` + `CAL_COM_API_KEY` + `CAL_COM_EVENT_TYPE_ID` | Multi-turn loop with `check_availability` and `book_appointment` tools. Books straight into the calendar. |
+| **Single-shot AI** (Phase 2B) | `ANTHROPIC_API_KEY` only | Qualifies lead, suggests callback. Doesn't propose specific times. |
+| **Static template** (Phase 2B fallback) | nothing | Friendly canned reply. |
+
+### Tool-use loop
+
+`generateWithToolsLoop()` in `lib/sms-reply.ts`:
+1. Call Claude with the conversation history + tool definitions
+2. If Claude returns `tool_use` blocks → execute the tools, append results, loop
+3. If Claude returns text only → that's the SMS body, return it
+4. Hard-cap at `MAX_TOOL_ITERATIONS = 5` so a misbehaving model can't infinite-loop
+
+### Tool implementations (`lib/cal-com.ts`)
+
+- `listAvailableSlots({ daysAhead, timeZone })` — calls `GET /v2/slots`. Returns up to 10 slots formatted as `{ iso, label }` pairs. The AI gets the friendly label to show the customer and the ISO to feed back into `book_appointment`.
+- `createBooking({ startIso, customerName, customerEmail, customerPhone, notes })` — calls `POST /v2/bookings`. If customer didn't provide an email, synthesizes a placeholder (Cal.com requires an email field but works fine without a real one — the customer just doesn't get the email confirmation; we send our own SMS confirmation instead).
+
+### System prompt — what we tell Claude
+
+The full prompt is in `withToolsSystemPrompt()`. Key directives:
+
+- "Always call `check_availability` BEFORE proposing times. Never make up times."
+- "Once they pick a time, ask for name if needed, then call `book_appointment`."
+- "After booking succeeds, confirm in your reply ('Booked you for Friday at 2pm')."
+- "If a tool errors, recover gracefully — offer to have someone call them back."
+- The customer's phone is pre-filled into the prompt so Claude doesn't have to extract it.
+
+### Env vars
+
+- `CAL_COM_API_KEY` — `cal_live_...` from Cal.com → Settings → Developer → API keys
+- `CAL_COM_EVENT_TYPE_ID` — numeric ID from the event type's edit URL (`?id=12345`)
+
+### What's NOT in this PR
+
+- **Booking confirmation SMS** — the AI's reply IS the confirmation. Cal.com would send an email if a real email was provided. A separate post-booking SMS template could reinforce ("Confirmed! See you Friday at 2pm. Text CANCEL to reschedule.")
+- **Rescheduling / cancellation via SMS** — the AI doesn't have tools for these yet. Adding `reschedule_appointment` and `cancel_appointment` is a 30-min extension.
+- **Bookings DB table** — Cal.com is the source of truth for bookings. We could mirror them in our DB for analytics; not done.
+- **Admin booking view in CRM** — bookings live in Cal.com's dashboard. A future CRM tab could embed Cal.com or query its bookings API.
+
+### Cal.com API caveats
+
+The v2 API has had several iterations. The adapter pins versions via the `cal-api-version` header (`2024-09-04` for slots, `2024-08-13` for bookings). When wiring up a real client, verify the response shapes against current Cal.com docs and adjust the adapter if Cal.com has shipped a breaking change.

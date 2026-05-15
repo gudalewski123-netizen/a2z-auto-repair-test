@@ -10,5 +10,7 @@
   "leadNotifyTo": "teddy.nk28@gmail.com",
   "calBookingUrl": "",
   "clientCellNumber": "",
-  "twilioNumber": ""
+  "twilioNumber": "",
+  "reviewRequestUrl": "",
+  "calComEventTypeId": ""
 }

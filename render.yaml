@@ -82,3 +82,29 @@ services:
       # to true in production.
       - key: SKIP_TWILIO_SIGNATURE_VERIFY
         value: "false"
+      # ===== Phase 2C — review-request SMS on job completion =====
+      # When admin marks a job complete in the CRM, an SMS goes out to the
+      # customer asking for a review. The link below is what the SMS embeds.
+      # Get the client's Google Business Profile review link via:
+      #   https://supple.com.au/tools/google-review-link-generator/
+      # OR the Google Business Profile dashboard → "Get more reviews".
+      # Leave empty to disable review-request SMS for this client.
+      - key: REVIEW_REQUEST_URL
+        sync: false
+      # ===== Phase 2D — AI books appointments into Cal.com directly =====
+      # When BOTH ANTHROPIC_API_KEY and the two CAL_COM_* vars below are set,
+      # the AI gets `check_availability` and `book_appointment` tools — it can
+      # propose specific times AND confirm the booking via the Cal.com v2 API.
+      # If either is missing, the AI falls back to qualifying + suggesting
+      # a callback (Phase 2B behavior).
+      #
+      # Setup:
+      #   1. Client signs up at cal.com (free tier works)
+      #   2. Connects their Google/Outlook/iCloud calendar
+      #   3. Creates an event type (e.g. "30-min phone consultation")
+      #   4. Settings → Developer → API keys → generate
+      #   5. Find the event type's numeric ID in the URL when editing it
+      - key: CAL_COM_API_KEY
+        sync: false
+      - key: CAL_COM_EVENT_TYPE_ID
+        sync: false
