@@ -126,7 +126,7 @@ function templateReply(ctx: ReplyContext): string {
   if (isFirstReply) {
     // Casual, human-sounding opener. Avoid "auto-reply" / "automated message"
     // language — the goal is to feel like a real person texting back.
-    return `Hey, sorry I missed your call — what can I help you with? — ${ctx.business.name}`;
+    return `Hey, sorry we missed your call — what can we help you with? — ${ctx.business.name}`;
   }
   return `Got it — thanks for the details. Someone will follow up shortly. For anything urgent, call ${ctx.business.phone}. — ${ctx.business.name}`;
 }
@@ -167,14 +167,14 @@ async function generateSingleShot(
 function noToolsSystemPrompt(ctx: ReplyContext): string {
   const isMissedCall = ctx.latestInbound === "[missed call]";
   const openerInstruction = isMissedCall
-    ? `This customer just called and you missed their call. Open the conversation with a casual, human apology like "Hey, sorry I missed your call — what can I help you with?" — do not greet by name (you don't know it yet), do not introduce yourself, do not say "this is ${ctx.business.name}" since that's awkward. Just be a person.`
+    ? `This customer just called and you missed their call. Open the conversation with a casual, business-friendly apology like "Hey, sorry we missed your call — what can we help you with?" — do not greet by name (you don't know it yet), do not introduce yourself, do not say "this is ${ctx.business.name}" since that's awkward. Use "we" / "us" / "our" (you're speaking on behalf of the business), NOT "I" / "me" / "my".`
     : `Respond briefly to keep the conversation moving forward.`;
 
   return [
     `You work at ${ctx.business.name}, a ${ctx.business.trade} business in ${ctx.business.location}. You are texting back a customer over SMS.`,
     `Your job: qualify the lead and steer toward booking a callback or appointment.`,
     `${openerInstruction}`,
-    `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member — casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can I help with?"`,
+    `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member speaking on behalf of the business — use "we" / "us" / "our", casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can we help with?"`,
     `Keep replies under 320 characters. Plain text. No markdown. No emoji unless the customer used one first.`,
     `Ask one question at a time.`,
     `If they describe what they need, suggest a callback time ("Can someone call you at 2pm today?").`,
@@ -341,7 +341,7 @@ function parseToolArgs(raw: string | undefined, logger?: PinoLikeLogger): Record
 function withToolsSystemPrompt(ctx: ReplyContext): string {
   const isMissedCall = ctx.latestInbound === "[missed call]";
   const openerInstruction = isMissedCall
-    ? `This customer just called and you missed their call. Open with a casual, human apology like "Hey, sorry I missed your call — what can I help you with?" — do not introduce yourself, do not say "this is ${ctx.business.name}" since that's awkward. Just be a person.`
+    ? `This customer just called and you missed their call. Open with a casual, business-friendly apology like "Hey, sorry we missed your call — what can we help you with?" — do not introduce yourself, do not say "this is ${ctx.business.name}" since that's awkward. Use "we" / "us" / "our" (you're speaking on behalf of the business), NOT "I" / "me" / "my".`
     : `Continue the conversation naturally based on what they said.`;
 
   const lines = [
@@ -350,7 +350,7 @@ function withToolsSystemPrompt(ctx: ReplyContext): string {
     ``,
     `${openerInstruction}`,
     ``,
-    `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member — casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can I help with?"`,
+    `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member speaking on behalf of the business — use "we" / "us" / "our", casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can we help with?"`,
     ``,
     `Tools you can use (internal — never mention these to the customer):`,
     `- check_availability: query the calendar. Always call this BEFORE suggesting specific times. Never make up times.`,
