@@ -15,6 +15,7 @@ import LeadsNew from "@/pages/leads-new";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import SiteSettings from "@/pages/site-settings";
+import Messages from "@/pages/messages";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,13 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Pipeline />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/messages">
+        <ProtectedRoute>
+          <AppLayout>
+            <Messages />
           </AppLayout>
         </ProtectedRoute>
       </Route>
