@@ -21,6 +21,8 @@
 import { db, jobsTable, contactsTable } from "@workspace/db";
 import { and, eq, isNull, lte, isNotNull } from "drizzle-orm";
 import { sendReviewRequest } from "./review-request";
+import { listRecentBookings, isCalConfigured } from "./cal-com";
+import { syncBookingCreated } from "./crm-sync";
 import { logger as rootLogger } from "./logger";
 
 const DEFAULT_DELAY_HOURS = 3;
@@ -110,12 +112,93 @@ async function processOne(job: CandidateJob): Promise<{ ok: boolean; reason?: st
   return { ok: true };
 }
 
+/**
+ * Poll Cal.com for bookings that ENDED between (delayHours ago) and
+ * (delayHours + 24h ago). For each one not yet in the CRM, create a
+ * contact + job. The next half of the tick (findCandidates) will then
+ * pick them up and fire the review SMS.
+ *
+ * This catches bookings that came in directly through Cal.com (e.g. the
+ * website's booking widget) and never went through the SMS AI flow —
+ * without it, those customers would never receive a review-request SMS.
+ *
+ * Skipped silently if CAL_COM_API_KEY isn't set.
+ */
+async function pollCalComForCompletedBookings(delayHours: number): Promise<number> {
+  if (!isCalConfigured()) return 0;
+
+  const now = Date.now();
+  // Look back 24h beyond the delay window so we catch bookings that ended
+  // between (e.g.) 3h and 27h ago. Ticks run every 10 min so this overlap
+  // is intentional — gives us multiple chances to catch each booking.
+  const beforeStartIso = new Date(now - delayHours * 60 * 60 * 1000).toISOString();
+  const afterStartIso = new Date(now - (delayHours + 24) * 60 * 60 * 1000).toISOString();
+
+  let bookings;
+  try {
+    bookings = await listRecentBookings({ afterStartIso, beforeStartIso });
+  } catch (err) {
+    rootLogger.warn(
+      { err: err instanceof Error ? err.message : err },
+      "Review scheduler: Cal.com poll failed (skipping this tick)",
+    );
+    return 0;
+  }
+
+  let importedCount = 0;
+  for (const b of bookings) {
+    // Only sync bookings that are confirmed and have a phone number to text
+    if (b.status !== "accepted") continue;
+    if (!b.customerPhone) continue;
+
+    // Already synced (either via the SMS flow or a previous poll)?
+    const [existing] = await db
+      .select({ id: jobsTable.id })
+      .from(jobsTable)
+      .where(eq(jobsTable.calBookingUid, b.uid))
+      .limit(1);
+    if (existing) continue;
+
+    // Create the CRM contact + job. The next phase of this tick will see it
+    // (date < cutoff) and fire the review SMS.
+    const result = await syncBookingCreated(
+      {
+        calBookingUid: b.uid,
+        startIso: b.startIso,
+        customerName: b.customerName,
+        customerPhone: b.customerPhone,
+        serviceType: process.env.BUSINESS_TRADE || "Service",
+        notes: b.notes || "Booked directly via Cal.com",
+      },
+      rootLogger,
+    );
+
+    if (result.jobId) {
+      importedCount++;
+    }
+  }
+
+  if (importedCount > 0) {
+    rootLogger.info(
+      { importedCount },
+      "Review scheduler: imported new Cal.com bookings into CRM",
+    );
+  }
+  return importedCount;
+}
+
 async function tick(): Promise<void> {
   const delayHours = Number(process.env.REVIEW_REQUEST_DELAY_HOURS || DEFAULT_DELAY_HOURS);
-  const cutoff = new Date(Date.now() - delayHours * 60 * 60 * 1000);
-  const cutoffIso = cutoff.toISOString();
 
   try {
+    // Step 1: import any Cal.com bookings that aren't yet in the CRM. This
+    // runs FIRST so the new jobs are visible to findCandidates() below in
+    // the same tick (no need to wait 10 min for the next one).
+    await pollCalComForCompletedBookings(delayHours);
+
+    // Step 2: find CRM jobs that are overdue + send the review SMS.
+    const cutoff = new Date(Date.now() - delayHours * 60 * 60 * 1000);
+    const cutoffIso = cutoff.toISOString();
     const candidates = await findCandidates(cutoffIso);
     if (candidates.length === 0) return;
 

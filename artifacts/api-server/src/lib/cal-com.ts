@@ -302,3 +302,89 @@ export async function cancelBooking(params: CancelParams): Promise<void> {
     throw new Error(`Cal.com cancel API ${res.status}: ${errBody.slice(0, 300)}`);
   }
 }
+
+// =====================================================================
+//  listRecentBookings — used by the review-request scheduler to find
+//  appointments that ended in the past N hours so it can fire a review
+//  SMS even for bookings that came in directly through Cal.com (not via
+//  the AI SMS flow).
+// =====================================================================
+
+export interface PastBooking {
+  uid: string;
+  startIso: string;
+  endIso: string;
+  status: string;        // "accepted" | "cancelled" | "rejected" | "pending"
+  customerName: string;
+  customerPhone: string; // E.164 or empty if Cal.com didn't capture one
+  notes?: string;        // Pulled from metadata.notes if set
+}
+
+interface ListRecentBookingsParams {
+  /** Match bookings whose startTime is at or after this ISO timestamp */
+  afterStartIso: string;
+  /** Match bookings whose startTime is at or before this ISO timestamp */
+  beforeStartIso: string;
+  /** Optional: limit to a specific event type. Defaults to the configured one. */
+  eventTypeId?: number;
+  /** Soft cap on results per call (Cal.com default is 100, max 250). */
+  take?: number;
+}
+
+/**
+ * List bookings whose START time falls within the given window. Cal.com's
+ * v2 /bookings endpoint paginates with `take` + `skip`; we keep it small
+ * (default 50) since the scheduler runs frequently.
+ *
+ * Returns bookings of ALL statuses (caller filters). Cancelled bookings
+ * MUST be excluded by the caller before sending review-request SMS.
+ */
+export async function listRecentBookings(params: ListRecentBookingsParams): Promise<PastBooking[]> {
+  const creds = getCreds();
+  if (!creds) return [];
+
+  const url = new URL(`${CAL_API_BASE}/bookings`);
+  url.searchParams.set("afterStart", params.afterStartIso);
+  url.searchParams.set("beforeStart", params.beforeStartIso);
+  url.searchParams.set("take", String(params.take ?? 50));
+  if (params.eventTypeId ?? creds.eventTypeId) {
+    url.searchParams.set("eventTypeIds", String(params.eventTypeId ?? creds.eventTypeId));
+  }
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${creds.apiKey}`,
+      "cal-api-version": CAL_BOOKINGS_VERSION,
+      Accept: "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error(`Cal.com bookings list API ${res.status}: ${errBody.slice(0, 300)}`);
+  }
+
+  const data = (await res.json()) as {
+    data?: Array<{
+      uid: string;
+      start: string;
+      end: string;
+      status: string;
+      attendees?: Array<{ name?: string; phoneNumber?: string }>;
+      metadata?: { notes?: string };
+    }>;
+  };
+
+  return (data.data || []).map((b) => {
+    const attendee = b.attendees?.[0] || {};
+    return {
+      uid: b.uid,
+      startIso: b.start,
+      endIso: b.end,
+      status: b.status,
+      customerName: attendee.name || "Customer",
+      customerPhone: attendee.phoneNumber || "",
+      notes: b.metadata?.notes,
+    };
+  });
+}
