@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REPLACE_WITH_RENDER_URL.onrender.com/api/:path*"
+      "destination": "https://a2z-auto-repair-test.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
