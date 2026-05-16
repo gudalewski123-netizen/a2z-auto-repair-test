@@ -16,6 +16,7 @@ import { db, smsConversationsTable, smsMessagesTable } from "@workspace/db";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { sendSms, verifyTwilioSignature } from "../lib/twilio";
 import { generateReply } from "../lib/sms-reply";
+import { getCustomerHistory } from "../lib/crm-sync";
 import { requireAdmin, requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -128,6 +129,10 @@ async function handleInboundSms(
     ? { uid: conv.lastBookingUid, scheduledAtIso: conv.lastBookingScheduledAt.toISOString() }
     : undefined;
 
+  // Tier-S: load past completed jobs so the AI can acknowledge prior visits.
+  // Best-effort — empty array on lookup failure means AI just doesn't reference history.
+  const pastJobs = await getCustomerHistory(callerPhone, logger);
+
   const reply = await generateReply(
     {
       business: {
@@ -143,6 +148,7 @@ async function handleInboundSms(
       })),
       latestInbound: messageBody,
       existingBooking,
+      pastJobs,
     },
     logger,
   );

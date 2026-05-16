@@ -19,14 +19,17 @@
 // SMS. Same logic the manual /complete endpoint already uses.
 
 import { db, jobsTable, contactsTable } from "@workspace/db";
-import { and, eq, isNull, lte, isNotNull } from "drizzle-orm";
+import { and, eq, isNull, lte, gte, isNotNull } from "drizzle-orm";
 import { sendReviewRequest } from "./review-request";
 import { listRecentBookings, isCalConfigured } from "./cal-com";
 import { syncBookingCreated } from "./crm-sync";
+import { sendSms } from "./twilio";
 import { logger as rootLogger } from "./logger";
 
 const DEFAULT_DELAY_HOURS = 3;
 const DEFAULT_INTERVAL_MINUTES = 10;
+const DEFAULT_REMINDER_HOURS_BEFORE = 24;
+const DEFAULT_RECURRING_DAYS = 90;
 const STARTUP_DELAY_MS = 60_000;
 
 let timer: NodeJS.Timeout | null = null;
@@ -187,6 +190,141 @@ async function pollCalComForCompletedBookings(delayHours: number): Promise<numbe
   return importedCount;
 }
 
+// =====================================================================
+//  Tier-S bundle: 24h pre-appointment reminders
+// =====================================================================
+
+/**
+ * Fire a "your appointment is tomorrow" SMS for each upcoming job whose
+ * `date` is between (now + reminderHours - INTERVAL/2) and (now +
+ * reminderHours + INTERVAL/2). This window catches every appointment
+ * exactly once even though ticks fire every 10 min.
+ *
+ * We skip jobs that have reminderSentAt set (idempotent) or are already
+ * completed/cancelled (no point reminding for a job that's done).
+ */
+async function processUpcomingReminders(): Promise<number> {
+  const reminderHours = Number(process.env.REMINDER_HOURS_BEFORE || DEFAULT_REMINDER_HOURS_BEFORE);
+  const intervalMin = Number(process.env.REVIEW_SCHEDULER_INTERVAL_MIN || DEFAULT_INTERVAL_MINUTES);
+  const halfIntervalMs = (intervalMin / 2) * 60 * 1000;
+
+  const target = Date.now() + reminderHours * 60 * 60 * 1000;
+  const lowerIso = new Date(target - halfIntervalMs).toISOString();
+  const upperIso = new Date(target + halfIntervalMs).toISOString();
+
+  const candidates = await db
+    .select({
+      jobId: jobsTable.id,
+      date: jobsTable.date,
+      serviceType: jobsTable.serviceType,
+      customerName: contactsTable.name,
+      customerPhone: contactsTable.phone,
+    })
+    .from(jobsTable)
+    .innerJoin(contactsTable, eq(contactsTable.id, jobsTable.contactId))
+    .where(
+      and(
+        isNotNull(jobsTable.date),
+        gte(jobsTable.date, lowerIso),
+        lte(jobsTable.date, upperIso),
+        isNull(jobsTable.completedAt),
+        isNull(jobsTable.reminderSentAt),
+      ),
+    )
+    .limit(50);
+
+  if (candidates.length === 0) return 0;
+
+  const businessName = process.env.BUSINESS_NAME || "us";
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER || "";
+  let firedCount = 0;
+
+  for (const c of candidates) {
+    if (!c.customerPhone) continue;
+    const apptDate = new Date(c.date!);
+    const dayLabel = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "America/New_York" }).format(apptDate);
+    const timeLabel = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).format(apptDate);
+
+    const body = `Hey ${c.customerName.split(" ")[0]} — just a heads up, we'll see you ${dayLabel} at ${timeLabel} for your ${c.serviceType.toLowerCase()}. Reply C to cancel. — ${businessName}`;
+
+    const result = await sendSms({ to: c.customerPhone, body, from: fromNumber });
+    if (result.ok) {
+      await db.update(jobsTable).set({ reminderSentAt: new Date() }).where(eq(jobsTable.id, c.jobId));
+      rootLogger.info({ jobId: c.jobId, sid: result.sid }, "Reminder scheduler: 24h SMS fired");
+      firedCount++;
+    } else {
+      rootLogger.warn({ jobId: c.jobId, err: result.error }, "Reminder scheduler: SMS send failed");
+    }
+  }
+
+  return firedCount;
+}
+
+// =====================================================================
+//  Tier-S bundle: recurring service reminders
+// =====================================================================
+
+/**
+ * Fire a "time for another [service]?" SMS for each completed job whose
+ * `completedAt` is exactly RECURRING_DAYS ago (within the tick interval).
+ * Idempotent via recurringReminderSentAt.
+ *
+ * Per-trade default: 90 days for most trades. Configurable via
+ * RECURRING_REMINDER_DAYS env var (e.g. 180 for HVAC, 30 for hair salons).
+ * Set RECURRING_REMINDER_DISABLED=true to skip entirely.
+ */
+async function processRecurringReminders(): Promise<number> {
+  if (process.env.RECURRING_REMINDER_DISABLED?.toLowerCase() === "true") return 0;
+
+  const recurringDays = Number(process.env.RECURRING_REMINDER_DAYS || DEFAULT_RECURRING_DAYS);
+  const intervalMin = Number(process.env.REVIEW_SCHEDULER_INTERVAL_MIN || DEFAULT_INTERVAL_MINUTES);
+  // Window the cutoff by the tick interval so we catch each job once.
+  const target = Date.now() - recurringDays * 24 * 60 * 60 * 1000;
+  const lower = new Date(target - intervalMin * 60 * 1000 / 2);
+  const upper = new Date(target + intervalMin * 60 * 1000 / 2);
+
+  const candidates = await db
+    .select({
+      jobId: jobsTable.id,
+      serviceType: jobsTable.serviceType,
+      customerName: contactsTable.name,
+      customerPhone: contactsTable.phone,
+    })
+    .from(jobsTable)
+    .innerJoin(contactsTable, eq(contactsTable.id, jobsTable.contactId))
+    .where(
+      and(
+        isNotNull(jobsTable.completedAt),
+        gte(jobsTable.completedAt, lower),
+        lte(jobsTable.completedAt, upper),
+        isNull(jobsTable.recurringReminderSentAt),
+      ),
+    )
+    .limit(50);
+
+  if (candidates.length === 0) return 0;
+
+  const businessName = process.env.BUSINESS_NAME || "us";
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER || "";
+  let firedCount = 0;
+
+  for (const c of candidates) {
+    if (!c.customerPhone) continue;
+    const body = `Hey ${c.customerName.split(" ")[0]} — it's been about ${recurringDays} days since your last ${c.serviceType.toLowerCase()}. Want to book another? — ${businessName}`;
+
+    const result = await sendSms({ to: c.customerPhone, body, from: fromNumber });
+    if (result.ok) {
+      await db.update(jobsTable).set({ recurringReminderSentAt: new Date() }).where(eq(jobsTable.id, c.jobId));
+      rootLogger.info({ jobId: c.jobId, sid: result.sid }, "Recurring scheduler: nudge SMS fired");
+      firedCount++;
+    } else {
+      rootLogger.warn({ jobId: c.jobId, err: result.error }, "Recurring scheduler: SMS send failed");
+    }
+  }
+
+  return firedCount;
+}
+
 async function tick(): Promise<void> {
   const delayHours = Number(process.env.REVIEW_REQUEST_DELAY_HOURS || DEFAULT_DELAY_HOURS);
 
@@ -196,7 +334,13 @@ async function tick(): Promise<void> {
     // the same tick (no need to wait 10 min for the next one).
     await pollCalComForCompletedBookings(delayHours);
 
-    // Step 2: find CRM jobs that are overdue + send the review SMS.
+    // Step 2: 24h-out reminders (Tier-S bundle)
+    await processUpcomingReminders();
+
+    // Step 3: recurring service reminders (Tier-S bundle)
+    await processRecurringReminders();
+
+    // Step 4: find CRM jobs that are overdue + send the review SMS.
     const cutoff = new Date(Date.now() - delayHours * 60 * 60 * 1000);
     const cutoffIso = cutoff.toISOString();
     const candidates = await findCandidates(cutoffIso);

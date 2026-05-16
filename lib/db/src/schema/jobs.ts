@@ -23,6 +23,14 @@ export const jobsTable = pgTable("jobs", {
   // Set when the review-request SMS has been sent so we don't duplicate.
   // Cleared by POST /jobs/:id/resend-review-request if admin needs to retry.
   reviewRequestSentAt: timestamp("review_request_sent_at", { withTimezone: true }),
+  // Set when the "your appointment is tomorrow" pre-appointment reminder
+  // SMS has been sent. Prevents duplicates if the scheduler runs multiple
+  // times within the reminder window.
+  reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+  // Set when the recurring "time for your next [service]" SMS has been sent
+  // (Tier-S bundle). Prevents duplicates if a customer's last completed job
+  // sits in the recurring window for many ticks.
+  recurringReminderSentAt: timestamp("recurring_reminder_sent_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

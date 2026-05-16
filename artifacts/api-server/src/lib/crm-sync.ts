@@ -175,3 +175,66 @@ export async function syncBookingCancelled(
     return { skipped: "db_error" };
   }
 }
+
+// =====================================================================
+//  Customer history lookup (Tier-S bundle)
+// =====================================================================
+
+export interface PastJobSummary {
+  serviceType: string;
+  /** ISO date of when the work was performed (completedAt or date) */
+  whenIso: string;
+}
+
+/**
+ * Look up the customer's prior completed jobs by phone number. Used by the
+ * SMS AI flow so replies can reference past visits ("we last saw you in
+ * March for your brakes — what's up this time?").
+ *
+ * Returns up to 5 most recent jobs, newest first. Empty array if no
+ * matching contact / no prior jobs / no portal user yet.
+ */
+export async function getCustomerHistory(
+  phone: string,
+  logger?: PinoLikeLogger,
+): Promise<PastJobSummary[]> {
+  if (!phone) return [];
+
+  const userId = await getTenantUserId();
+  if (!userId) return [];
+
+  try {
+    const [contact] = await db
+      .select({ id: contactsTable.id })
+      .from(contactsTable)
+      .where(and(eq(contactsTable.userId, userId), eq(contactsTable.phone, phone)))
+      .limit(1);
+    if (!contact) return [];
+
+    const rows = await db
+      .select({
+        serviceType: jobsTable.serviceType,
+        completedAt: jobsTable.completedAt,
+        date: jobsTable.date,
+      })
+      .from(jobsTable)
+      .where(and(eq(jobsTable.userId, userId), eq(jobsTable.contactId, contact.id)))
+      .orderBy(jobsTable.createdAt)
+      .limit(5);
+
+    return rows
+      .map((r) => ({
+        serviceType: r.serviceType,
+        // Prefer completedAt if set; fall back to scheduled date
+        whenIso: r.completedAt?.toISOString() || r.date || "",
+      }))
+      .filter((r) => r.whenIso !== "")
+      .reverse(); // newest first
+  } catch (err) {
+    logger?.warn(
+      { err: err instanceof Error ? err.message : err, phone },
+      "Customer history lookup failed",
+    );
+    return [];
+  }
+}

@@ -48,6 +48,11 @@ export interface ReplyContext {
   latestInbound: string;
   /** If this customer has a current booking (from a prior turn), AI can reschedule/cancel it. */
   existingBooking?: ExistingBooking;
+  /**
+   * Past completed jobs for this customer, newest first (Tier-S bundle).
+   * If non-empty, AI is told to acknowledge prior visits naturally.
+   */
+  pastJobs?: Array<{ serviceType: string; whenIso: string }>;
 }
 
 /** Side effects the AI performed this turn — caller updates DB to match. */
@@ -175,12 +180,30 @@ function noToolsSystemPrompt(ctx: ReplyContext): string {
     `Your job: qualify the lead and steer toward booking a callback or appointment.`,
     `${openerInstruction}`,
     `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member speaking on behalf of the business — use "we" / "us" / "our", casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can we help with?"`,
+    pastJobsLine(ctx),
+    `LANGUAGE: detect the customer's language from their messages. Reply in the SAME language they used. If they wrote in Spanish, reply in Spanish. French, French. English, English. Don't switch unless they do.`,
     `Keep replies under 320 characters. Plain text. No markdown. No emoji unless the customer used one first.`,
     `Ask one question at a time.`,
     `If they describe what they need, suggest a callback time ("Can someone call you at 2pm today?").`,
     `If they ask price, deflect to a callback: "Hard to quote sight-unseen — quick 5-min call and we can get you a number. When's good?".`,
     `End every reply with: "— ${ctx.business.name}"`,
   ].join(" ");
+}
+
+/**
+ * Format past-jobs context for the AI. Empty string when no history so the
+ * prompt stays clean for first-time customers.
+ */
+function pastJobsLine(ctx: ReplyContext): string {
+  if (!ctx.pastJobs || ctx.pastJobs.length === 0) return "";
+  const items = ctx.pastJobs
+    .slice(0, 3)
+    .map((j) => {
+      const when = j.whenIso ? new Date(j.whenIso).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "previously";
+      return `${j.serviceType} (${when})`;
+    })
+    .join(", ");
+  return `CUSTOMER HISTORY: this customer has previously booked: ${items}. If natural, acknowledge it briefly ("hey welcome back" / "thanks for being a returning customer"). Do NOT list it back at them mechanically.`;
 }
 
 // =====================================================================
@@ -351,6 +374,10 @@ function withToolsSystemPrompt(ctx: ReplyContext): string {
     `${openerInstruction}`,
     ``,
     `CRITICAL: NEVER reveal you are an AI, bot, automated system, or assistant. You ARE the business. Talk like a real human staff member speaking on behalf of the business — use "we" / "us" / "our", casual, friendly, direct. Use contractions. Match the customer's energy. If asked "is this a real person?" or "is this AI?", deflect naturally: "Yeah just got your call/text — what can we help with?"`,
+    ``,
+    pastJobsLine(ctx),
+    ``,
+    `LANGUAGE: detect the customer's language from their messages. Reply in the SAME language they used. If they wrote in Spanish, reply in Spanish. French, French. English, English. Don't switch unless they do.`,
     ``,
     `Tools you can use (internal — never mention these to the customer):`,
     `- check_availability: query the calendar. Always call this BEFORE suggesting specific times. Never make up times.`,
